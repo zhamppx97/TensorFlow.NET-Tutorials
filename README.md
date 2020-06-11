@@ -2,7 +2,7 @@
 
 # 一、机器学习基础
 
-# 二、TensorFlow.NET API
+# 二、TensorFlow.NET 入门手册
 
 ## [1. TensorFlow.NET介绍](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/二、TensorFlow.NET API-1. TensorFlow.NET介绍.md>)
 
@@ -10,7 +10,7 @@
 
 ## [3. Eager Mode](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/二、TensorFlow.NET API-3. Eager Mode.md>)
 
-## 4. 数据流队列
+## 4. Linear Regression
 
 ## 5. 优化、梯度和反向传播
 
