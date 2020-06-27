@@ -6,7 +6,7 @@
 
 ## [1. TensorFlow.NET介绍](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/二、TensorFlow.NET API-1. TensorFlow.NET介绍.md>)
 
-## 2. 数据类型与张量详解
+## [2. 数据类型与张量详解](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/%E4%BA%8C%E3%80%81TensorFlow.NET%20API-2.%20%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E4%B8%8E%E5%BC%A0%E9%87%8F%E8%AF%A6%E8%A7%A3.md>)
 
 ## [3. Eager Mode](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/二、TensorFlow.NET API-3. Eager Mode.md>)
 
