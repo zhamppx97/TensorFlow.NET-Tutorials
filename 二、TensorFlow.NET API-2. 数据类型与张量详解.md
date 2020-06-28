@@ -210,14 +210,190 @@ Address of the variable: 180185198040
 
 
 
-### 2.4 常用数据操作
+### 2.4 基本张量操作
 
-tf.cast 可以改变张量的数据类型：
+**① tf.cast** 可以改变张量的数据类型：
 
 ```c#
-
+//这个例子演示 将int32类型的值转换为float32类型的值
+var h = tf.constant(new[] { 123, 456 }, dtype: tf.int32);
+var f = tf.cast(h, tf.float32);
+print(h);
+print(f);
 ```
 
+输出结果如下，通过 tf.cast 将int32类型的值转换为float32类型的值： 
+
+tf.Tensor: shape=(2), dtype=int32, numpy=[123, 456]
+tf.Tensor: shape=(2), dtype=float32, numpy=[123, 456]
+
+
+
+**② tf.range** 创建区间张量值：
+
+```c#
+var b = tf.range(1, 10, delta: 2);
+print(b);
+```
+
+常用参数说明：
+
+参数1 start：区间初始值
+
+参数2 limit：区间限定值，取值<limit（不等于limit）
+
+参数3 delta：区间值递增的差量
+
+输出结果如下：
+
+tf.Tensor: shape=(5), dtype=int32, numpy=[1, 3, 5, 7, 9]
+
+
+
+**③ tf.zeros / tf.ones** 创建0值和1值的张量：
+
+下述例子创建一个 3×4 的0值张量 和 4×5的1值张量，一般可用于 张量的初始化。
+
+```c#
+var zeros = tf.zeros((3, 4));
+print(zeros);
+var ones = tf.ones((4, 5));
+print(ones);
+//TODO://var values = tf.fill((4, 5),6);
+//print(values);
+```
+
+输出结果如下：
+
+tf.Tensor: shape=(3,4), dtype=float32, numpy=[[0, 0, 0, 0],
+[0, 0, 0, 0],
+[0, 0, 0, 0]]
+tf.Tensor: shape=(4,5), dtype=float32, numpy=[[1, 1, 1, 1, 1],
+[1, 1, 1, 1, 1],
+[1, 1, 1, 1, 1],
+[1, 1, 1, 1, 1]]
+
+
+
+**④ tf.random** 生成随机分布张量
+
+tf.random.normal随机生成正态分布的张量；
+
+tf.random.truncated_normal随机生成正态分布的张量，剔除2倍方差以外数据；
+
+```c#
+var normal1 = tf.random.normal((3, 4), mean: 100, stddev: 10.2f);
+print(normal1);
+var normal2 = tf.random.truncated_normal((3, 4), mean: 100, stddev: 10.2f);
+print(normal2);
+```
+
+常用参数说明：
+
+参数1 shape：生成的正态随机分布张量的形状
+
+参数2 mean：正态分布的中心值
+
+参数3 stddev：正态分布的标准差
+
+输出结果如下：
+
+tf.Tensor: shape=(3,4), dtype=float32, numpy=[[115.2682, 102.2946, 108.8016, 105.1554],
+[94.24945, 88.12776, 70.64314, 105.8668],
+[115.6427, 92.41293, 106.8677, 84.75417]]
+tf.Tensor: shape=(3,4), dtype=float32, numpy=[[99.32899, 101.9571, 87.46071, 101.9749],
+[101.2237, 105.6187, 105.9899, 98.18528],
+[86.55171, 91.12146, 101.8604, 98.7331]]
+
+
+
+**⑤ 张量的数学运算** 请参考章节 “二、TensorFlow.NET API-3. Eager Mode”
+
+
+
+**⑥ 索引切片** 
+
+可以通过张量的索引读取元素，对于Variable，可以通过索引对部分元素进行修改。
+
+下述为张量的索引功能的演示：
+
+```c#
+var t = tf.constant(new NDArray(new[,] {
+{11,12,13,14,15 },{ 21,22,23,24,25},{ 31,32,33,34,35},
+{ 41,42,43,44,45},{ 51,52,53,54,55},{ 61,62,63,64,65} }));
+print(t);
+
+//取第0行
+print(t[0]);
+
+//取最后1行
+print(t[-1]);
+
+//取第1行第3列
+print(t[1, 3]);
+print(t[1][3]);
+
+//TODO:
+//gather,gather_nd,boolean_mask
+//where,scatter_nd
+```
+
+输出如下：
+
+tf.Tensor: shape=(6,5), dtype=int32, numpy=[[11, 12, 13, 14, 15],
+[21, 22, 23, 24, 25],
+[31, 32, 33, 34, 35],
+[41, 42, 43, 44, 45],
+[51, 52, 53, 54, 55],
+[61, 62, 63, 64, 65]]
+tf.Tensor: shape=(5), dtype=int32, numpy=[11, 12, 13, 14, 15]
+tf.Tensor: shape=(5), dtype=int32, numpy=[61, 62, 63, 64, 65]
+tf.Tensor: shape=(), dtype=int32, numpy=24
+tf.Tensor: shape=(), dtype=int32, numpy=24
+
+
+
+下述为张量的切片功能的演示：
+
+```c#
+var t = tf.constant(new NDArray(new[,] {
+{11,12,13,14,15 },{ 21,22,23,24,25},{ 31,32,33,34,35},
+{ 41,42,43,44,45},{ 51,52,53,54,55},{ 61,62,63,64,65} }));
+print(t);
+
+//取第1行至第3行
+print(t[new Slice(1, 4)]);
+
+//2种方式：取第1行至最后1行，第0列至最后1列，每隔2列取1列
+print(t[new Slice(1, 6), new Slice(0, 5, 2)]);
+print(t[new Slice(1), new Slice(step: 2)]);
+```
+
+输出如下：
+
+tf.Tensor: shape=(6,5), dtype=int32, numpy=[[11, 12, 13, 14, 15],
+[21, 22, 23, 24, 25],
+[31, 32, 33, 34, 35],
+[41, 42, 43, 44, 45],
+[51, 52, 53, 54, 55],
+[61, 62, 63, 64, 65]]
+tf.Tensor: shape=(3,5), dtype=int32, numpy=[[21, 22, 23, 24, 25],
+[31, 32, 33, 34, 35],
+[41, 42, 43, 44, 45]]
+tf.Tensor: shape=(5,3), dtype=int32, numpy=[[21, 23, 25],
+[31, 33, 35],
+[41, 43, 45],
+[51, 53, 55],
+[61, 63, 65]]
+tf.Tensor: shape=(5,3), dtype=int32, numpy=[[21, 23, 25],
+[31, 33, 35],
+[41, 43, 45],
+[51, 53, 55],
+[61, 63, 65]]
+
+
+
+### 2.5 维度变换
 
 
 
@@ -227,12 +403,15 @@ tf.cast 可以改变张量的数据类型：
 
 
 
+### 2.6 合并分割
 
 
 
 
 
-### 2.5 广播
+
+
+### 2.7 广播
 
 
 
