@@ -395,11 +395,104 @@ tf.Tensor: shape=(5,3), dtype=int32, numpy=[[21, 23, 25],
 
 ### 2.5 维度变换
 
+张量的维度变换操作主要是改变张量的形状，主要有 tf.reshape，tf.squeeze，tf.expand_dims，tf.transpose。
 
 
 
+**① tf.reshape** 改变张量的形状
+
+tf.reshape 主要改变张量的形状，该操作不会改变张量在内存中的存储顺序，因此速度非常快，并且操作可逆。
+
+```c#
+var t = tf.constant(new[,] { { 1, 2, 3, 4, 5, 6 }, { 7, 8, 9, 10, 11, 12 } });
+print(t);
+
+var t_r = tf.reshape(t, new[] { 3, 4 });
+print(t_r);
+
+var t_r2 = tf.reshape(t, new[] { 1, 2, 3, 2 });
+print(t_r2);
+```
+
+输入如下：
+
+tf.Tensor: shape=(2,6), dtype=int32, numpy=[[1, 2, 3, 4, 5, 6],
+[7, 8, 9, 10, 11, 12]]
+tf.Tensor: shape=(3,4), dtype=int32, numpy=[[1, 2, 3, 4],
+[5, 6, 7, 8],
+[9, 10, 11, 12]]
+tf.Tensor: shape=(1,2,3,2), dtype=int32, numpy=[[[[1, 2],
+[3, 4],
+[5, 6]],
+[[7, 8],
+[9, 10],
+[11, 12]]]]
 
 
+
+**② tf.squeeze** 维度压缩简化
+
+使用 tf.squeeze 可以消除张量中的单个元素的维度，和 tf.reshape 一样，该操作也不会改变张量的内存存储顺序。
+
+```c#
+var a = tf.constant(new NDArray(new[, ,] { { { 1 }, { 2 }, { 3 } }, { { 4 }, { 5 }, { 6 } } }));
+print(a);
+
+var b = tf.squeeze(a);
+print(b);
+```
+
+输出如下：
+
+tf.Tensor: shape=(2,3,1), dtype=int32, numpy=[[[1],
+[2],
+[3]],
+[[4],
+[5],
+[6]]]
+tf.Tensor: shape=(2,3), dtype=int32, numpy=[[1, 2, 3],
+[4, 5, 6]]
+
+
+
+**③ tf.expand_dims** 增加维度
+
+tf.squeeze 的逆向操作为 tf.expand_dims，即往指定的维中插入长度为1的维度。
+
+```c#
+var a = tf.constant(new[,] { { 1, 2, 3 }, { 4, 5, 6 } });
+print(a);
+
+//从 0维 插入长度为 1 的维度
+var b = tf.expand_dims(a, 0);
+print(b);
+```
+
+输出如下：
+
+tf.Tensor: shape=(2,3), dtype=int32, numpy=[[1, 2, 3],
+[4, 5, 6]]
+tf.Tensor: shape=(1,2,3), dtype=int32, numpy=[[[1, 2, 3],
+[4, 5, 6]]]
+
+
+
+**④ tf.transpose** 维度交换
+
+tf.transpose 可以交换张量的维度，与 tf.reshape 不同，它会改变张量元素的存储顺序。
+
+```c#
+var a = tf.constant(new NDArray(new[, , ,]{ { { { 1.0, 1.0 }, { 2.0, 2.0 } },{ { 3.0, 3.0 },{4.0,4.0 } } },
+{{{ 5.0,5.0 },{6.0,6.0 } },{{7.0,7.0 },{8.0,8.0 } } } }));
+print(a);
+
+var b = tf.transpose(a, new[] { 3, 1, 2, 0 });
+print(b);
+```
+
+输出如下：
+
+//TODO: 待添加
 
 
 
