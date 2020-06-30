@@ -142,7 +142,7 @@ tf.Tensor: shape=(), dtype=string, numpy=b'hello world'
 代码如下：
 
 ```c#
-var tensor4 = tf.constant(new NDArray(new[, , ,]{ { { { 1.0, 1.0 }, { 2.0, 2.0 } },{ { 3.0, 3.0 },{4.0,4.0 } } },
+var tensor4 = tf.constant(np.array(new[, , ,]{ { { { 1.0, 1.0 }, { 2.0, 2.0 } },{ { 3.0, 3.0 },{4.0,4.0 } } },
                                                  {{{ 5.0,5.0 },{6.0,6.0 } },{{7.0,7.0 },{8.0,8.0 } } } })); // 4维张量
 print(tensor4);
 print(tf.rank(tensor4));
@@ -318,7 +318,7 @@ tf.Tensor: shape=(3,4), dtype=float32, numpy=[[99.32899, 101.9571, 87.46071, 101
 下述为张量的索引功能的演示：
 
 ```c#
-var t = tf.constant(new NDArray(new[,] {
+var t = tf.constant(np.array(new[,] {
 {11,12,13,14,15 },{ 21,22,23,24,25},{ 31,32,33,34,35},
 { 41,42,43,44,45},{ 51,52,53,54,55},{ 61,62,63,64,65} }));
 print(t);
@@ -356,7 +356,7 @@ tf.Tensor: shape=(), dtype=int32, numpy=24
 下述为张量的切片功能的演示：
 
 ```c#
-var t = tf.constant(new NDArray(new[,] {
+var t = tf.constant(np.array(new[,] {
 {11,12,13,14,15 },{ 21,22,23,24,25},{ 31,32,33,34,35},
 { 41,42,43,44,45},{ 51,52,53,54,55},{ 61,62,63,64,65} }));
 print(t);
@@ -482,8 +482,8 @@ tf.Tensor: shape=(1,2,3), dtype=int32, numpy=[[[1, 2, 3],
 tf.transpose 可以交换张量的维度，与 tf.reshape 不同，它会改变张量元素的存储顺序。
 
 ```c#
-var a = tf.constant(new NDArray(new[, , ,]{ { { { 1.0, 1.0 }, { 2.0, 2.0 } },{ { 3.0, 3.0 },{4.0,4.0 } } },
-{{{ 5.0,5.0 },{6.0,6.0 } },{{7.0,7.0 },{8.0,8.0 } } } }));
+var a = tf.constant(np.array(new[, , ,] { { { { 1, 11, 2, 22 } }, { { 3, 33, 4, 44 } } },
+                                         { { { 5, 55, 6, 66 } }, { { 7, 77, 8, 88 } } } }));
 print(a);
 
 var b = tf.transpose(a, new[] { 3, 1, 2, 0 });
@@ -492,7 +492,22 @@ print(b);
 
 输出如下：
 
-//TODO: 待添加
+tf.Tensor: shape=(2,2,1,4), dtype=int32, numpy=[[[[1, 11, 2, 22]],
+[[3, 33, 4, 44]]],
+[[[5, 55, 6, 66]],
+[[7, 77, 8, 88]]]]
+tf.Tensor: shape=(4,2,1,2), dtype=int32, numpy=[[[[1, 5]],
+[[3, 7]]],
+[[[11, 55]],
+[[33, 77]]],
+[[[2, 6]],
+[[4, 8]]],
+[[[22, 66]],
+[[44, 88]]]]
+
+上述方法中的维度变化示意图如下：
+
+<img src="二、TensorFlow.NET API-2. 数据类型与张量详解.assets/image-20200630230358377.png" alt="image-20200630230358377" style="zoom:67%;" />
 
 
 
