@@ -505,7 +505,7 @@ tf.Tensor: shape=(4,2,1,2), dtype=int32, numpy=[[[[1, 5]],
 [[[22, 66]],
 [[44, 88]]]]
 
-上述方法中的维度变化示意图如下：
+上述方法中的维度变化 transpose 的过程示意图如下：
 
 <img src="二、TensorFlow.NET API-2. 数据类型与张量详解.assets/image-20200630230358377.png" alt="image-20200630230358377" style="zoom:67%;" />
 
@@ -513,21 +513,128 @@ tf.Tensor: shape=(4,2,1,2), dtype=int32, numpy=[[[[1, 5]],
 
 ### 2.6 合并分割
 
+张量的合并分割和numpy类似，其中合并有2种不同的实现方式，tf.concat 方法可以连接不同的张量，在同一设定的维度进行，不会增加维度，tf.stack 采用维度堆叠的方式 会增加维度。
+
+
+
+**① tf.concat**
+
+我们来测试下使用 tf.concat 连接3个 shape 为 [2,2] 的张量，concatValue1 通过在 axis:0 维度的张量连接操作，合并为1个 shape 为 [6,2] 的新张量，concatValue2 通过在 axis:-1 维度的张量连接操作，合并为1个 shape 为 [2,6] 的新张量
+
+```c#
+var a = tf.constant(new[,] { { 1, 2 }, { 3, 4 } });
+var b = tf.constant(new[,] { { 5, 6 }, { 7, 8 } });
+var c = tf.constant(new[,] { { 9, 10 }, { 11, 12 } });
+
+var concatValue1 = tf.concat(new[] { a, b, c }, axis: 0);
+print(concatValue1);
+
+var concatValue2 = tf.concat(new[] { a, b, c }, axis: -1);
+print(concatValue2);
+```
+
+输入如下，正确地实现和张量的连接合并功能：
+
+tf.Tensor: shape=(6,2), dtype=int32, numpy=[[1, 2],
+[3, 4],
+[5, 6],
+[7, 8],
+[9, 10],
+[11, 12]]
+tf.Tensor: shape=(2,6), dtype=int32, numpy=[[1, 2, 5, 6, 9, 10],
+[3, 4, 7, 8, 11, 12]]
+
+
+
+**② tf.stack**
+
+同样是上面的例子，我们将 tf.concat 替换为 tf.stack ，可以看到， tf.stack 在指定的维度上创建了新的维，并将输入张量在新维度上进行堆叠操作，通过例子的运行，我们可以看到2种方式的内部机制的差异。
+
+```c#
+var a = tf.constant(new[,] { { 1, 2 }, { 3, 4 } });
+var b = tf.constant(new[,] { { 5, 6 }, { 7, 8 } });
+var c = tf.constant(new[,] { { 9, 10 }, { 11, 12 } });
+
+var concatValue1 = tf.stack(new[] { a, b, c }, axis: 0);
+print(concatValue1);
+
+var concatValue2 = tf.stack(new[] { a, b, c }, axis: -1);
+print(concatValue2);
+```
+
+输入结果如下：
+
+tf.Tensor: shape=(3,2,2), dtype=int32, numpy=[[[1, 2],
+[3, 4]],
+[[5, 6],
+[7, 8]],
+[[9, 10],
+[11, 12]]]
+tf.Tensor: shape=(2,2,3), dtype=int32, numpy=[[[1, 5, 9],
+[2, 6, 10]],
+[[3, 7, 11],
+[4, 8, 12]]]
+
+
+
+上面2个例子演示了张量的合并操作，接下来我们来测试张量的分割，张量的分割 tf.split 是 tf.concat 的逆操作，可以将张量平均分割或者按照指定的形状分割。
+
+**③ tf.split**
+
+//待更新
 
 
 
 
 
 
-### 2.7 广播
 
 
 
 
 
+### 2.7 广播机制
+
+接下来，我们来聊聊在 numpy 和 Tensor 中都很重要的一个特性，Broadcasting 即广播机制，又称作动态扩展机制。广播是一种十分轻量的张量复制操作，它只会在逻辑上扩展张量的形状，而不会直接执行实际存储IO的复制操作，经过广播后的张量在视图上会体现出复制后的形状。
+
+实际数据运算的时候，Broadcasting 会通过深度学习框架的优化技术，避免实际复制数据而完成逻辑运算，对于用户来说，Broadcasting 和 tf.tile 复制数据的最终实现效果是相同的，但是 Broadcasting 节省了大量的计算资源并自动优化了运算速度。
+
+但是，Broadcasting 并不是任何场合都适用的，下面我们来介绍下 Broadcasting 的使用规则和实现效果：
+
+1. 如果张量的维度不同，将对维度较小的张量**左侧补齐**进行扩展，直到两个张量的维度相同；
+2. 如果两个张量在某个维度上的长度是相同的，或者其中一个张量在该维度上的长度为1，那么我们就说这两个张量**在该维度上是相容的**；
+3. 如果两个张量在所有维度上（或通过上述1的过程扩展后）都是是相容的，它们就能使用广播机制，这就是广播机制的核心思想 - 普适性；
+4. 广播之后，每个维度的长度取两个张量在该维度长度的较大值；
+5. 在任何一个维度上，如果一个张量的长度为1，另一个张量长度大于1，那么在该维度上，就好像是对第一个张量进行了复制。
+
+我们通过图示的方法进行进一步地举例说明。
+
+首先是可广播的情形，张量 B 的 shape 为 [w,1]，张量 A 的 shape 为 [b,h,w,c]，不同维度的张量相加运算 A + B 是可以正常运行的，这就是广播机制的作用，张量 B 通过广播 Broadcasting 扩展为和 A 相同的 shape [b,h,w,c]。扩展过程如下，分为 3 步走：
+
+<img src="二、TensorFlow.NET API-2. 数据类型与张量详解.assets/image-20200703211726634.png" alt="image-20200703211726634" style="zoom:67%;" />
+
+然后，我们来看下不可广播的情形，同样是上面这个例子，如果张量 B 的 shape 为 [w,2]，同时张量 A 的 shape 为 [b,h,w,c]，其中 c≠2，则这两个张量不符合普适性原则，无法应用广播机制，运行张量相加操作 A + B 会触发报错，如图所示：
+
+<img src="二、TensorFlow.NET API-2. 数据类型与张量详解.assets/image-20200703212632844.png" alt="image-20200703212632844" style="zoom:67%;" />
 
 
 
+广播机制的实现有2种方式：
 
+1. 隐式自动调用
 
+   在进行不同 shape 的张量运算时，隐式地自动调用Broadcasting 机制，如 +，-，*，/ 等运算，将参与运算的张量 Broadcasting 成一个统一的 shape，再进行相应的计算；
 
+   
+
+   
+
+2. 显式广播方法
+
+   使用 tf.broadcast_to 显式地调用广播方法，对指定的张量广播至指定的 shape 。
+
+   
+
+   
+
+   
