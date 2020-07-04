@@ -583,13 +583,20 @@ tf.Tensor: shape=(2,2,3), dtype=int32, numpy=[[[1, 5, 9],
 
 //待更新
 
+//下述内容待更新
 
+```c#
+var a = tf.constant(new[,] { { 1, 2 }, { 3, 4 } });
+var b = tf.constant(new[,] { { 5, 6 }, { 7, 8 } });
+var c = tf.constant(new[,] { { 9, 10 }, { 11, 12 } });
 
+var concatValue = tf.concat(new[] { a, b, c }, axis: 0);
+print(concatValue);
 
-
-
-
-
+var splitValue = tf.split(concatValue, 3,axis: new Tensor(0));
+print(splitValue);
+```
+//------------------------------------------------------
 
 
 
@@ -625,7 +632,26 @@ tf.Tensor: shape=(2,2,3), dtype=int32, numpy=[[[1, 5, 9],
 
    在进行不同 shape 的张量运算时，隐式地自动调用Broadcasting 机制，如 +，-，*，/ 等运算，将参与运算的张量 Broadcasting 成一个统一的 shape，再进行相应的计算；
 
+   ```c#
+   var a1 = tf.constant(new int[] { 1, 2, 3 });
+   var b1 = tf.constant(new int[,] { { 0, 0, 0 }, { 1, 1, 1 }, { 2, 2, 2 } });
+   var c1 = b1 + a1; //same as :  b + tf.broadcast_to(a,b.shape)
+   print(c1);
    
+   var a2 = tf.constant(new int[] { 1, 2, 3 });
+   var b2 = tf.constant(new int[,] { { 1 }, { 2 }, { 3 } });
+   var c2 = b2 + a2; //same as :  tf.broadcast_to(c,[3,3]) + tf.broadcast_to(d,[3,3])
+   print(c2);
+   ```
+
+   运行结果如下：
+
+   tf.Tensor: shape=(3,3), dtype=int32, numpy=[[1, 2, 3],
+   [2, 3, 4],
+   [3, 4, 5]]
+   tf.Tensor: shape=(3,3), dtype=int32, numpy=[[2, 3, 4],
+   [3, 4, 5],
+   [4, 5, 6]]
 
    
 
@@ -633,8 +659,26 @@ tf.Tensor: shape=(2,2,3), dtype=int32, numpy=[[[1, 5, 9],
 
    使用 tf.broadcast_to 显式地调用广播方法，对指定的张量广播至指定的 shape 。
 
+   ```c#
+var a1 = tf.constant(new int[] { 1, 2, 3 });
+   var b1 = tf.constant(new int[,] { { 0, 0, 0 }, { 1, 1, 1 }, { 2, 2, 2 } });
+var c1 = tf.broadcast_to(a1, b1.shape);
+   print(c1);
    
-
+   var a2 = tf.constant(new int[,] { { 1 }, { 2 }, { 3 } });
+   var c2 = tf.broadcast_to(a2, new[] { 3, 3 });
+   print(c2);
+   ```
    
-
+   运行结果如下：
+   
+   tf.Tensor: shape=(3,3), dtype=int32, numpy=[[1, 2, 3],
+   [1, 2, 3],
+   [1, 2, 3]]
+   tf.Tensor: shape=(3,3), dtype=int32, numpy=[[1, 1, 1],
+   [2, 2, 2],
+   [3, 3, 3]]
+   
+   
+   
    
