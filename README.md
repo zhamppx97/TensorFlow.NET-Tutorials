@@ -10,7 +10,7 @@
 
 ## [3. Eager Mode](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/二、TensorFlow.NET API-3. Eager Mode.md>)
 
-## 4. 自动求导机制
+## [4. 自动求导机制](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/二、TensorFlow.NET API-4. 自动求导机制.md>)
 
 ## 5. Linear Regression
 
