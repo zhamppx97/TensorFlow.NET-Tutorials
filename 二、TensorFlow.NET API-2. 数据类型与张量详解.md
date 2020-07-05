@@ -307,7 +307,9 @@ tf.Tensor: shape=(3,4), dtype=float32, numpy=[[99.32899, 101.9571, 87.46071, 101
 
 
 
-**⑤ 张量的数学运算** 请参考章节 “二、TensorFlow.NET API-3. Eager Mode”
+**⑤ 张量的数学运算**
+
+请参考章节 “二、TensorFlow.NET API-3. Eager Mode”
 
 
 
@@ -581,28 +583,29 @@ tf.Tensor: shape=(2,2,3), dtype=int32, numpy=[[[1, 5, 9],
 
 **③ tf.split**
 
-//待更新
-
-//下述内容待更新
+我们利用下述代码将 a，b，c 合并为 shape:[3,2,2] 的 concatValue，再通过 tf.split 将 concatValue 的0维分割，还原为3个 shape:[2,2] 的张量数组 splitValue：
 
 ```c#
 var a = tf.constant(new[,] { { 1, 2 }, { 3, 4 } });
 var b = tf.constant(new[,] { { 5, 6 }, { 7, 8 } });
 var c = tf.constant(new[,] { { 9, 10 }, { 11, 12 } });
-
 var concatValue = tf.concat(new[] { a, b, c }, axis: 0);
-print(concatValue);
 
-var splitValue = tf.split(concatValue, 3,axis: new Tensor(0));
+var splitValue = tf.split(concatValue, 3, axis: 0);
 print(splitValue);
 ```
-//------------------------------------------------------
+代码输出如下：
+
+[tf.Tensor: shape=(2,2), dtype=int32, numpy=[[1, 2],
+[3, 4]], tf.Tensor: shape=(2,2), dtype=int32, numpy=[[5, 6],
+[7, 8]], tf.Tensor: shape=(2,2), dtype=int32, numpy=[[9, 10],
+[11, 12]]]
 
 
 
 ### 2.7 广播机制
 
-接下来，我们来聊聊在 numpy 和 Tensor 中都很重要的一个特性，Broadcasting 即广播机制，又称作动态扩展机制。广播是一种十分轻量的张量复制操作，它只会在逻辑上扩展张量的形状，而不会直接执行实际存储IO的复制操作，经过广播后的张量在视图上会体现出复制后的形状。
+接下来，我们来聊聊在 numpy 和 Tensor 中都很常用并且很重要的一个特性，Broadcasting，即广播机制，又称作自动扩展机制。广播是一种十分轻量的张量复制操作，它只会在逻辑上扩展张量的形状，而不会直接执行实际存储IO的复制操作，经过广播后的张量在视图上会体现出复制后的形状。
 
 实际数据运算的时候，Broadcasting 会通过深度学习框架的优化技术，避免实际复制数据而完成逻辑运算，对于用户来说，Broadcasting 和 tf.tile 复制数据的最终实现效果是相同的，但是 Broadcasting 节省了大量的计算资源并自动优化了运算速度。
 

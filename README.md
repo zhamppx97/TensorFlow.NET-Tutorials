@@ -10,19 +10,21 @@
 
 ## [3. Eager Mode](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/二、TensorFlow.NET API-3. Eager Mode.md>)
 
-## 4. Linear Regression
+## 4. 自动求导机制
 
-## 5. 优化、梯度和反向传播
+## 5. Linear Regression
 
-## 6. Train相关
+## 6. 优化、梯度和反向传播
 
-## 7. 动态图模式
+## 7. Train相关
 
-## 8. Tensorboard和Summary类
+## 8. 动态图模式
 
-## 9. CheckPoint操作
+## 9. Tensorboard和Summary类
 
-## 10. 神经网络相关
+## 10. CheckPoint操作
+
+## 11. 神经网络相关
 
 # 三、工业应用与案例
 
