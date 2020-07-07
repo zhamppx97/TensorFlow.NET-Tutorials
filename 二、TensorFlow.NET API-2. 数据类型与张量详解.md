@@ -62,7 +62,9 @@ print(x.shape);
 
 输出如下：
 
+```
 [2, 4]
+```
 
 **② 类型：**
 
@@ -73,7 +75,9 @@ print(x.dtype);
 
 输出如下：
 
+```
 TF_INT32
+```
 
 Tensor 的属性 dtype 返回 TF_DataType类型的枚举，可以很方便地通过 print()方法进行输出。
 
@@ -86,8 +90,10 @@ print(x.numpy());
 
 输出如下：
 
+```
 [[1, 2, 3, 4],
 [5, 6, 7, 8]]
+```
 
 Tensor 的 numpy() 方法返回 NumSharp.NDArray 类型的返回值，内容为 Tensor 保存的值内容，可以很方便地通过 print()方法进行输出。
 
@@ -108,9 +114,11 @@ Console.WriteLine(a2);
 
 结果输出如下：
 
+```
 1
 
 2
+```
 
 通过上述结果可以看到，原来的张量类型快速转换成了 普通的数值类型。
 
@@ -145,12 +153,14 @@ print(b);
 
 输出如下：
 
+```
 tf.Tensor: shape=(), dtype=int32, numpy=1
 tf.Tensor: shape=(), dtype=TF_INT64, numpy=1
 tf.Tensor: shape=(), dtype=TF_DOUBLE, numpy=1.23
 tf.Tensor: shape=(), dtype=TF_DOUBLE, numpy=3.14
 tf.Tensor: shape=(), dtype=string, numpy=b'hello world'
 //TODO:最后一行待确定 tf.Tensor: shape=(), dtype=tf@bool, numpy=true
+```
 
 
 
@@ -173,6 +183,7 @@ print(tf.rank(tensor4));
 
 代码运行输出如下：
 
+```
 tf.Tensor: shape=(2,2,2,2), dtype=TF_DOUBLE, numpy=[[[[1, 1],
 [2, 2]],
 [[3, 3],
@@ -182,6 +193,7 @@ tf.Tensor: shape=(2,2,2,2), dtype=TF_DOUBLE, numpy=[[[[1, 1],
 [[7, 7],
 [8, 8]]]]
 tf.Tensor: shape=(), dtype=int32, numpy=4
+```
 
 
 
@@ -198,7 +210,9 @@ print(v);
 
 代码输出如下：
 
+```
 tf.Variable: 'v:0' shape=(1, 2), dtype=int32, numpy=[[1, 2]]
+```
 
 
 
@@ -226,10 +240,12 @@ unsafe
 
 输出结果如下：
 
+```
 Value of the variable: tf.Variable: 'Variable:0' shape=(1, 2), dtype=int32, numpy=[[1, 2]]
 Address of the variable: 180185198040
 Value of the variable: tf.Variable: 'Variable:0' shape=(1, 2), dtype=int32, numpy=[[4, 6]]
 Address of the variable: 180185198040
+```
 
 
 
@@ -247,8 +263,10 @@ print(f);
 
 输出结果如下，通过 tf.cast 将int32类型的值转换为float32类型的值： 
 
+```
 tf.Tensor: shape=(2), dtype=int32, numpy=[123, 456]
 tf.Tensor: shape=(2), dtype=float32, numpy=[123, 456]
+```
 
 
 
@@ -269,7 +287,9 @@ print(b);
 
 输出结果如下：
 
+```
 tf.Tensor: shape=(5), dtype=int32, numpy=[1, 3, 5, 7, 9]
+```
 
 
 
@@ -288,6 +308,7 @@ print(ones);
 
 输出结果如下：
 
+```
 tf.Tensor: shape=(3,4), dtype=float32, numpy=[[0, 0, 0, 0],
 [0, 0, 0, 0],
 [0, 0, 0, 0]]
@@ -295,6 +316,7 @@ tf.Tensor: shape=(4,5), dtype=float32, numpy=[[1, 1, 1, 1, 1],
 [1, 1, 1, 1, 1],
 [1, 1, 1, 1, 1],
 [1, 1, 1, 1, 1]]
+```
 
 
 
@@ -321,12 +343,14 @@ print(normal2);
 
 输出结果如下：
 
+```
 tf.Tensor: shape=(3,4), dtype=float32, numpy=[[115.2682, 102.2946, 108.8016, 105.1554],
 [94.24945, 88.12776, 70.64314, 105.8668],
 [115.6427, 92.41293, 106.8677, 84.75417]]
 tf.Tensor: shape=(3,4), dtype=float32, numpy=[[99.32899, 101.9571, 87.46071, 101.9749],
 [101.2237, 105.6187, 105.9899, 98.18528],
 [86.55171, 91.12146, 101.8604, 98.7331]]
+```
 
 
 
@@ -365,6 +389,7 @@ print(t[1][3]);
 
 输出如下：
 
+```
 tf.Tensor: shape=(6,5), dtype=int32, numpy=[[11, 12, 13, 14, 15],
 [21, 22, 23, 24, 25],
 [31, 32, 33, 34, 35],
@@ -375,6 +400,7 @@ tf.Tensor: shape=(5), dtype=int32, numpy=[11, 12, 13, 14, 15]
 tf.Tensor: shape=(5), dtype=int32, numpy=[61, 62, 63, 64, 65]
 tf.Tensor: shape=(), dtype=int32, numpy=24
 tf.Tensor: shape=(), dtype=int32, numpy=24
+```
 
 
 
@@ -396,6 +422,7 @@ print(t[new Slice(1), new Slice(step: 2)]);
 
 输出如下：
 
+```
 tf.Tensor: shape=(6,5), dtype=int32, numpy=[[11, 12, 13, 14, 15],
 [21, 22, 23, 24, 25],
 [31, 32, 33, 34, 35],
@@ -415,6 +442,7 @@ tf.Tensor: shape=(5,3), dtype=int32, numpy=[[21, 23, 25],
 [41, 43, 45],
 [51, 53, 55],
 [61, 63, 65]]
+```
 
 
 
@@ -441,6 +469,7 @@ print(t_r2);
 
 输入如下：
 
+```
 tf.Tensor: shape=(2,6), dtype=int32, numpy=[[1, 2, 3, 4, 5, 6],
 [7, 8, 9, 10, 11, 12]]
 tf.Tensor: shape=(3,4), dtype=int32, numpy=[[1, 2, 3, 4],
@@ -452,6 +481,7 @@ tf.Tensor: shape=(1,2,3,2), dtype=int32, numpy=[[[[1, 2],
 [[7, 8],
 [9, 10],
 [11, 12]]]]
+```
 
 
 
@@ -469,6 +499,7 @@ print(b);
 
 输出如下：
 
+```
 tf.Tensor: shape=(2,3,1), dtype=int32, numpy=[[[1],
 [2],
 [3]],
@@ -477,6 +508,7 @@ tf.Tensor: shape=(2,3,1), dtype=int32, numpy=[[[1],
 [6]]]
 tf.Tensor: shape=(2,3), dtype=int32, numpy=[[1, 2, 3],
 [4, 5, 6]]
+```
 
 
 
@@ -495,10 +527,12 @@ print(b);
 
 输出如下：
 
+```
 tf.Tensor: shape=(2,3), dtype=int32, numpy=[[1, 2, 3],
 [4, 5, 6]]
 tf.Tensor: shape=(1,2,3), dtype=int32, numpy=[[[1, 2, 3],
 [4, 5, 6]]]
+```
 
 
 
@@ -517,6 +551,7 @@ print(b);
 
 输出如下：
 
+```
 tf.Tensor: shape=(2,2,1,4), dtype=int32, numpy=[[[[1, 11, 2, 22]],
 [[3, 33, 4, 44]]],
 [[[5, 55, 6, 66]],
@@ -529,6 +564,7 @@ tf.Tensor: shape=(4,2,1,2), dtype=int32, numpy=[[[[1, 5]],
 [[4, 8]]],
 [[[22, 66]],
 [[44, 88]]]]
+```
 
 上述方法中的维度变化 transpose 的过程示意图如下：
 
@@ -560,6 +596,7 @@ print(concatValue2);
 
 输入如下，正确地实现和张量的连接合并功能：
 
+```
 tf.Tensor: shape=(6,2), dtype=int32, numpy=[[1, 2],
 [3, 4],
 [5, 6],
@@ -568,6 +605,7 @@ tf.Tensor: shape=(6,2), dtype=int32, numpy=[[1, 2],
 [11, 12]]
 tf.Tensor: shape=(2,6), dtype=int32, numpy=[[1, 2, 5, 6, 9, 10],
 [3, 4, 7, 8, 11, 12]]
+```
 
 
 
@@ -589,6 +627,7 @@ print(concatValue2);
 
 输入结果如下：
 
+```
 tf.Tensor: shape=(3,2,2), dtype=int32, numpy=[[[1, 2],
 [3, 4]],
 [[5, 6],
@@ -599,6 +638,7 @@ tf.Tensor: shape=(2,2,3), dtype=int32, numpy=[[[1, 5, 9],
 [2, 6, 10]],
 [[3, 7, 11],
 [4, 8, 12]]]
+```
 
 
 
@@ -619,10 +659,12 @@ print(splitValue);
 ```
 代码输出如下：
 
+```
 [tf.Tensor: shape=(2,2), dtype=int32, numpy=[[1, 2],
 [3, 4]], tf.Tensor: shape=(2,2), dtype=int32, numpy=[[5, 6],
 [7, 8]], tf.Tensor: shape=(2,2), dtype=int32, numpy=[[9, 10],
 [11, 12]]]
+```
 
 
 
@@ -672,12 +714,14 @@ print(splitValue);
 
    运行结果如下：
 
+   ```
    tf.Tensor: shape=(3,3), dtype=int32, numpy=[[1, 2, 3],
    [2, 3, 4],
    [3, 4, 5]]
    tf.Tensor: shape=(3,3), dtype=int32, numpy=[[2, 3, 4],
    [3, 4, 5],
    [4, 5, 6]]
+   ```
 
    
 
@@ -698,12 +742,14 @@ var c1 = tf.broadcast_to(a1, b1.shape);
    
    运行结果如下：
    
+   ```
    tf.Tensor: shape=(3,3), dtype=int32, numpy=[[1, 2, 3],
    [1, 2, 3],
    [1, 2, 3]]
    tf.Tensor: shape=(3,3), dtype=int32, numpy=[[1, 1, 1],
    [2, 2, 2],
    [3, 3, 3]]
+   ```
    
    
    

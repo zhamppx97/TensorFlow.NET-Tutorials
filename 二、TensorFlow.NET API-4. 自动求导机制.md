@@ -12,7 +12,7 @@
 
 Tensorflow的自动求导（automatic gradient / Automatic Differentiation）就是基于反向模式，就是我们常说的BP算法，其基于的原理是链式法则。实现的方式是利用反向传递与链式法则建立一张对应原计算图的梯度图，因为导数只是另外一张计算图，可以再次运行反向传播，对导数再进行求导以得到更高阶的导数。通过这种方式，我们仅需要一个前向过程和反向过程就可以计算所有参数的导数或者梯度，这对于拥有大量训练参数的神经网络模型梯度的计算特别适合。
 
-下图分别展示了普通函数和神经网络的自动求导示意图：
+下图分别展示了 **普通函数** 和 **神经网络** 的自动求导示意图：
 
 <img src="二、TensorFlow.NET API-4. 自动求导机制.assets/image-20200705211534801.png" alt="image-20200705211534801" style="zoom:67%;" />
 
@@ -56,8 +56,10 @@ namespace TF.NET_Test_Core
 
 输出：
 
+```
 tf.Tensor: shape=(), dtype=float32, numpy=9
 tf.Tensor: shape=(), dtype=float32, numpy=6
+```
 
 
 
@@ -71,9 +73,58 @@ tf.Tensor: shape=(), dtype=float32, numpy=6
 
 ### 4.3 复杂函数求偏导
 
+接下来，我们来尝试求解机器学习中比较常见的多元函数的偏导数，以及 对向量或矩阵的求导。以下代码展示了如何使用 `tf.GradientTape()` 计算函数 L(w,b) = ||Xw + b - y||² 在 
+$$
+w = (1,2)^T
+$$
+ ， b = 1 时分别对 w,b 的偏导数。其中，![1594110062791](二、TensorFlow.NET API-4. 自动求导机制.assets/1594110062791.png) 。
 
+代码如下：
 
+```c#
+using NumSharp;
+using System;
+using Tensorflow;
+using Tensorflow.Gradients;
+using static Tensorflow.Binding;
 
+namespace Test_Core
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            var X = tf.constant(new[,] { { 1.0f, 2.0f }, { 3.0f, 4.0f } });
+            var y = tf.constant(new[,] { { 1.0f }, { 2.0f } });
+            var w = tf.Variable(new[,] { { 1.0f }, { 2.0f } });
+            var b = tf.Variable(1.0f);
+            using var tape = tf.GradientTape();
+            var L = tf.reduce_sum(tf.square(tf.matmul(X, w) + b - y));
+            var (w_grad, b_grad) = tape.gradient(L, (w, b));
+            print($"{L}\r\n{w_grad}\r\n{b_grad}");
+
+            Console.ReadKey();
+        }
+    }
+}
+```
+
+注意：版本需要 c# 8.0 及以上，.NET Core 3.0 及以上，目标平台 x64；
+
+输出：
+
+```
+tf.Tensor: shape=(), dtype=float32, numpy=125
+tf.Tensor: shape=(2,1), dtype=float32, numpy=[[70],
+[100]]
+tf.Tensor: shape=(), dtype=float32, numpy=30
+```
+
+这里， `tf.square()` 操作代表对输入张量的每一个元素求平方，不改变张量形状。 `tf.reduce_sum()` 操作代表对输入张量的所有元素求和，输出一个形状为空的纯量张量（可以通过 `axis` 参数来指定求和的维度，不指定则默认对所有元素求和）。
+
+从输出可见，TensorFlow 帮助我们计算出了下述的结果：
+
+![1594110210352](二、TensorFlow.NET API-4. 自动求导机制.assets/1594110210352.png)
 
 
 
