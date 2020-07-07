@@ -91,6 +91,29 @@ print(x.numpy());
 
 Tensor 的 numpy() 方法返回 NumSharp.NDArray 类型的返回值，内容为 Tensor 保存的值内容，可以很方便地通过 print()方法进行输出。
 
+**④ 类型转换**
+
+在C#中，可以快速对0维张量进行类型转换，通过在变量前加 (type) 进行强制类型转换，代码参考如下：
+
+```c#
+var t1 = tf.constant(1.0);
+double a1 = (double)t1;
+Console.WriteLine(a1);
+
+
+var t2 = tf.Variable(2.0f);
+float a2 = (float)t2.numpy();
+Console.WriteLine(a2);
+```
+
+结果输出如下：
+
+1
+
+2
+
+通过上述结果可以看到，原来的张量类型快速转换成了 普通的数值类型。
+
 
 
 ### 2.3 常量与变量
