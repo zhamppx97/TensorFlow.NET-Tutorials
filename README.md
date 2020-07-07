@@ -12,7 +12,7 @@
 
 ## [4. 自动求导机制](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/二、TensorFlow.NET API-4. 自动求导机制.md>)
 
-## 5. Linear Regression
+## [5. Linear Regression](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/二、TensorFlow.NET API-5. Linear Regression.md>)
 
 ## 6. 优化、梯度和反向传播
 
