@@ -729,28 +729,26 @@ print(splitValue);
 
    使用 tf.broadcast_to 显式地调用广播方法，对指定的张量广播至指定的 shape 。
 
-   ```c#
+
+```c#
 var a1 = tf.constant(new int[] { 1, 2, 3 });
-   var b1 = tf.constant(new int[,] { { 0, 0, 0 }, { 1, 1, 1 }, { 2, 2, 2 } });
+var b1 = tf.constant(new int[,] { { 0, 0, 0 }, { 1, 1, 1 }, { 2, 2, 2 } });
 var c1 = tf.broadcast_to(a1, b1.shape);
-   print(c1);
-   
-   var a2 = tf.constant(new int[,] { { 1 }, { 2 }, { 3 } });
-   var c2 = tf.broadcast_to(a2, new[] { 3, 3 });
-   print(c2);
-   ```
-   
-   运行结果如下：
-   
-   ```
-   tf.Tensor: shape=(3,3), dtype=int32, numpy=[[1, 2, 3],
-   [1, 2, 3],
-   [1, 2, 3]]
-   tf.Tensor: shape=(3,3), dtype=int32, numpy=[[1, 1, 1],
-   [2, 2, 2],
-   [3, 3, 3]]
-   ```
-   
-   
-   
-   
+print(c1);
+
+var a2 = tf.constant(new int[,] { { 1 }, { 2 }, { 3 } });
+var c2 = tf.broadcast_to(a2, new[] { 3, 3 });
+print(c2);
+```
+
+运行结果如下：
+
+```
+tf.Tensor: shape=(3,3), dtype=int32, numpy=[[1, 2, 3],
+[1, 2, 3],
+[1, 2, 3]]
+tf.Tensor: shape=(3,3), dtype=int32, numpy=[[1, 1, 1],
+[2, 2, 2],
+[3, 3, 3]]
+```
+

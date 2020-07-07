@@ -77,7 +77,7 @@ tf.Tensor: shape=(), dtype=float32, numpy=6
 $$
 w = (1,2)^T
 $$
- ， b = 1 时分别对 w,b 的偏导数。其中，![1594110062791](二、TensorFlow.NET API-4. 自动求导机制.assets/1594110062791.png) 。
+ ， b = 1 时分别对 w,b 的偏导数。其中，<img src="二、TensorFlow.NET API-4. 自动求导机制.assets/1594110062791.png" alt="1594110062791" style="zoom:80%;" /> 。
 
 代码如下：
 
@@ -124,7 +124,9 @@ tf.Tensor: shape=(), dtype=float32, numpy=30
 
 从输出可见，TensorFlow 帮助我们计算出了下述的结果：
 
-![1594110210352](二、TensorFlow.NET API-4. 自动求导机制.assets/1594110210352.png)
+
+
+<img src="二、TensorFlow.NET API-4. 自动求导机制.assets/1594110210352.png" alt="1594110210352" style="zoom:100%;" />
 
 
 
