@@ -50,7 +50,7 @@ y^ 为预测值，自变量 x 和因变量 y 是已知的，而我们想实现�
 
 <img src="二、TensorFlow.NET API-5. Linear Regression.assets/image-20200709221515779.png" alt="image-20200709221515779" style="zoom:80%;" />
 
-关于梯度下降的求导过程，这里就不再详细说明，接下来，让我们通过 TensorFlow 的代码来实现一个简单的线性回归。
+关于梯度下降的求解过程，这里就不再详细说明，接下来，让我们通过 TensorFlow 的代码来实现一个简单的线性回归。
 
 
 
