@@ -140,7 +140,7 @@ step: 1000, loss: 0.15439445, W: 0.26092294, b: 0.7329534
 
 对应的线性回归拟合线如下：
 
-![image-20200714222429798](二、TensorFlow.NET API-5. Linear Regression.assets/image-20200714222429798.png)
+<img src="二、TensorFlow.NET API-5. Linear Regression.assets/image-20200714222429798.png" alt="image-20200714222429798" style="zoom:100%;" />
 
 
 
@@ -150,9 +150,9 @@ step: 1000, loss: 0.15439445, W: 0.26092294, b: 0.7329534
 
 下述2个图是具体的对比运行示意图：
 
-![20200627154950.jpg](二、TensorFlow.NET API-5. Linear Regression.assets/20200627154950.jpg)
+<img src="二、TensorFlow.NET API-5. Linear Regression.assets/20200627154950.jpg" alt="20200627154950.jpg" style="zoom:80%;" />
 
 
 
-![python-dotnet-comparision](二、TensorFlow.NET API-5. Linear Regression.assets/python-dotnet-comparision.gif)
+<img src="二、TensorFlow.NET API-5. Linear Regression.assets/python-dotnet-comparision.gif" alt="python-dotnet-comparision" style="zoom:80%;" />
 
