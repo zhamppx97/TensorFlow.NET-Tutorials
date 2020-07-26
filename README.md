@@ -46,7 +46,9 @@
 
 # 附录
 
-## 1. TensorFlow.NET 在工业应用中的优势
+## [1. TensorFlow.NET 在工业应用中的优势](<[https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/%E9%99%84%E5%BD%95%EF%BC%9A1.%20TensorFlow.NET%20%E5%9C%A8%E5%B7%A5%E4%B8%9A%E5%BA%94%E7%94%A8%E4%B8%AD%E7%9A%84%E4%BC%98%E5%8A%BF.md](https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/附录：1. TensorFlow.NET 在工业应用中的优势.md)>)
+
+## [2. 在C#下使用TensorFlow.NET训练自己的数据集](<[https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/%E9%99%84%E5%BD%95%EF%BC%9A2.%20%E5%9C%A8C%23%E4%B8%8B%E4%BD%BF%E7%94%A8TensorFlow.NET%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86.md](https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/附录：2. 在C%23下使用TensorFlow.NET训练自己的数据集.md)>)
 
 
 
