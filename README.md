@@ -44,6 +44,14 @@
 
 
 
+# 附录
+
+## 1. TensorFlow.NET 在工业应用中的优势
+
+
+
+
+
 # [Contact](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/Contact.md>)
 
 ## GitHub

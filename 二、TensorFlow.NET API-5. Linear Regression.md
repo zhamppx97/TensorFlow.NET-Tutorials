@@ -156,3 +156,9 @@ step: 1000, loss: 0.15439445, W: 0.26092294, b: 0.7329534
 
 <img src="二、TensorFlow.NET API-5. Linear Regression.assets/python-dotnet-comparision.gif" alt="python-dotnet-comparision" style="zoom:80%;" />
 
+
+
+### 5.4 视频教程
+
+视频教程链接地址（或扫描下面的二维码）：https://www.bilibili.com/video/BV1wf4y117qF?p=3
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-5.%20Linear%20Regression.assets/image-20200721190633289.png" alt="image-20200721190633289" style="zoom:80%;" />
