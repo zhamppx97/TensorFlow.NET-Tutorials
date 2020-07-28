@@ -14,7 +14,7 @@
 
 ## [5. Linear Regression](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/二、TensorFlow.NET API-5. Linear Regression.md>)
 
-## 6. MNIST手写字符分类 Logistic Regression
+## [6. MNIST手写字符分类 Logistic Regression](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/%E4%BA%8C%E3%80%81TensorFlow.NET%20API-6.%20MNIST%E6%89%8B%E5%86%99%E5%AD%97%E7%AC%A6%E5%88%86%E7%B1%BB%20Logistic%20Regression.md>)
 
 ## 7. 优化、梯度和反向传播
 
