@@ -14,17 +14,19 @@
 
 ## [5. Linear Regression](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/二、TensorFlow.NET API-5. Linear Regression.md>)
 
-## 6. 优化、梯度和反向传播
+## 6. MNIST手写字符分类 Logistic Regression
 
-## 7. Train相关
+## 7. 优化、梯度和反向传播
 
-## 8. 动态图模式
+## 8. Train相关
 
-## 9. Tensorboard和Summary类
+## 9. 动态图模式
 
-## 10. CheckPoint操作
+## 10. Tensorboard和Summary类
 
-## 11. 神经网络相关
+## 11. CheckPoint操作
+
+## 12. 神经网络相关
 
 # 三、工业应用与案例
 
