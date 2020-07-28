@@ -249,7 +249,153 @@ Address of the variable: 180185198040
 
 
 
-### 2.4 基本张量操作
+### 2.4 字符串常见操作
+
+**① 通过byte数组创建字符串**
+
+传入Hex 16进制的byte数组，打印输出对应的转换后的字符串，代码如下：
+
+```c#
+var tf_str = tf.constant(new byte[] { 0x41, 0x42, 0xd8, 0xff }, tf.@string);
+print(tf_str);
+```
+
+输出结果如下：
+
+```
+tf.Tensor: shape=(), dtype=string, numpy=AB\xd8\xff
+```
+
+也可以通过 ToString() 方法将 Tensor 整体转换为 string 进行输出，代码如下：
+
+```c#
+var tf_str = tf.constant(new byte[] { 0x41, 0x42, 0xd8, 0xff }, tf.@string);
+var str = tf_str.ToString();// return string
+print(str);
+```
+
+输出结果如下：
+
+```
+tf.Tensor: shape=(), dtype=string, numpy=AB\xd8\xff
+```
+
+
+
+**② numpy() 获字符串 Tensor 的值**
+
+numpy() 方法可以获取字符串 Tensor 的数值，代码如下：
+
+```c#
+var tf_str = tf.constant(new byte[] { 0x41, 0x42, 0xd8, 0xff }, tf.@string);
+var str = tf_str.numpy();// return NDArray
+print(str);
+```
+
+输出结果如下：
+
+```
+[65, 66, 216, 255]
+```
+
+
+
+**③ 字符串的截取 tf.strings.substr()**
+
+tf.strings.substr() 方法可以截取字符串，下述代码演示字符串的截取，并对截取后的字符串进行比较，最后输出 Tensor 的 bool 标量值，代码如下：
+
+```c#
+var str1 = tf.constant("Hello1");
+print("str1:" + str1);
+var str2 = tf.constant("Hello2");
+print("str2:" + str2);
+
+var str_sub1 = tf.strings.substr(str1, 0, 5);
+print("str_sub1:" + str_sub1);
+var str_sub2 = tf.strings.substr(str2, 0, 5);
+print("str_sub2:" + str_sub2);
+
+var result = tf.equal(str_sub1, str_sub2);
+print(result);
+print(result.ToScalar<bool>());
+```
+
+输出结果如下：
+
+```
+str1:tf.Tensor: shape=(), dtype=string, numpy=Hello1
+str2:tf.Tensor: shape=(), dtype=string, numpy=Hello2
+str_sub1:tf.Tensor: shape=(), dtype=string, numpy=Hello
+str_sub2:tf.Tensor: shape=(), dtype=string, numpy=Hello
+tf.Tensor: shape=(), dtype=bool, numpy=True
+True
+```
+
+主要参数说明如下：
+
+方法名：tf.strings.substr(Tensor input, int pos, int len, string name = null, string @uint = "BYTE") 
+
+参数1：input，类型 Tensor ，待截取的输入字符串
+
+参数2：pos，类型 int ，起始位置
+
+参数3：len，类型 int ，截取长度
+
+返回值：类型 Tensor ，返回截取后输出的字符串
+
+
+
+**④ 字符串数组张量的创建和转换**
+
+下述代码演示了字符串数组张量的创建，并打印出张量的形状和张量的内容，ToString() 方法可以将张量的完整内容转换为 string ，StringData() 方法可以提取出张量的值并转换为 string[] 数组类型：
+
+```c#
+var strings = new[] { "map_and_batch_fusion", "noop_elimination", "shuffle_and_repeat_fusion" };
+var tensor = tf.constant(strings, dtype: tf.@string, name: "optimizations");
+print(tensor.shape[0]);
+print(tensor);
+print(tensor.ToString());
+var stringData = tensor.StringData();//return string[]
+print(stringData);
+```
+
+输出结果如下：
+
+```
+3
+tf.Tensor: shape=(3), dtype=string, numpy=['map_and_batch_fusion', 'noop_elimination', 'shuffle_and_repeat_fusion']
+tf.Tensor: shape=(3), dtype=string, numpy=['map_and_batch_fusion', 'noop_elimination', 'shuffle_and_repeat_fusion']
+[map_and_batch_fusion, noop_elimination, shuffle_and_repeat_fusion]
+```
+
+
+
+**⑤ 本地文件(图像)读取示例**
+
+我们可以通过 tf.io.read_file() 方法从本地读取文件(图像)，并打印和测试该文件的前 3 个 byte 数据，代码如下：
+
+```c#
+var contents = tf.io.read_file("shasta-daisy.jpg");
+var substr = tf.strings.substr(contents, 0, 3);
+print(substr);
+var jpg = new byte[] { 0xff, 0xd8, 0xff };
+var jpg_tensor = tf.constant(jpg, tf.@string);
+print(jpg_tensor);
+var result = math_ops.equal(substr, jpg_tensor);
+print(result.ToScalar<bool>());
+```
+
+输出结果如下：
+
+```
+tf.Tensor: shape=(), dtype=string, numpy=\xff\xd8\xff
+tf.Tensor: shape=(), dtype=string, numpy=\xff\xd8\xff
+True
+```
+
+
+
+### 2.5 基本张量操作
 
 **① tf.cast** 可以改变张量的数据类型：
 
@@ -446,7 +592,31 @@ tf.Tensor: shape=(5,3), dtype=int32, numpy=[[21, 23, 25],
 
 
 
-### 2.5 维度变换
+**⑦ 张量比较**
+
+tf.equal 可以比较2个张量是否相同，ToScalar 可以获取 bool标量的值，代码如下：
+
+```c#
+var str1 = tf.constant("Hello1");
+var str2 = tf.constant("Hello2");
+var result = tf.equal(str1, str2);
+print(result.ToScalar<bool>());
+
+var str3 = tf.constant("Hello1");
+result = tf.equal(str1, str3);
+print(result.ToScalar<bool>());
+```
+
+输出结果如下：
+
+```
+False
+True
+```
+
+
+
+### 2.6 维度变换
 
 张量的维度变换操作主要是改变张量的形状，主要有 tf.reshape，tf.squeeze，tf.expand_dims，tf.transpose。
 
@@ -572,7 +742,7 @@ tf.Tensor: shape=(4,2,1,2), dtype=int32, numpy=[[[[1, 5]],
 
 
 
-### 2.6 合并分割
+### 2.7 合并分割
 
 张量的合并分割和numpy类似，其中合并有2种不同的实现方式，tf.concat 方法可以连接不同的张量，在同一设定的维度进行，不会增加维度，tf.stack 采用维度堆叠的方式 会增加维度。
 
@@ -668,7 +838,7 @@ print(splitValue);
 
 
 
-### 2.7 广播机制
+### 2.8 广播机制
 
 接下来，我们来聊聊在 numpy 和 Tensor 中都很常用并且很重要的一个特性，Broadcasting，即广播机制，又称作自动扩展机制。广播是一种十分轻量的张量复制操作，它只会在逻辑上扩展张量的形状，而不会直接执行实际存储IO的复制操作，经过广播后的张量在视图上会体现出复制后的形状。
 
