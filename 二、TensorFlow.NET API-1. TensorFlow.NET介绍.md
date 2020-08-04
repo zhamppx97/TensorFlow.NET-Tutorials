@@ -26,8 +26,8 @@ SciSharp STACK的机器学习工具库和微软官方的库最大的区别是：
   
 - **微软 F# 官方主推的大数据框架**
 
-  <img src="二、TensorFlow.NET API-1. TensorFlow.NET介绍.assets/image-20200730224849886.png" alt="image-20200730224849886" style="zoom:80%;" />![image-20200730225415356](二、TensorFlow.NET API-1. TensorFlow.NET介绍.assets/image-20200730225415356.png)
+  <img src="二、TensorFlow.NET API-1. TensorFlow.NET介绍.assets/image-20200730224849886.png" alt="image-20200730224849886" style="zoom:80%;" />![image-20200730225415356](二、TensorFlow.NET API-1. TensorFlow.NET介绍.assets/image-20200730225415356.png)<img src="二、TensorFlow.NET API-1. TensorFlow.NET介绍.assets/image-20200730224849886.png" alt="image-20200730224849886" style="zoom:80%;" />![image-20200730225415356](二、TensorFlow.NET API-1. TensorFlow.NET介绍.assets/image-20200730225415356.png)
 
-  ![image-20200730225415356](二、TensorFlow.NET API-1. TensorFlow.NET介绍.assets/image-20200730225415356.png)
+  <img src="二、TensorFlow.NET API-1. TensorFlow.NET介绍.assets/image-20200730225415356.png" alt="image-20200730225415356" style="zoom:80%;" />
 
 
