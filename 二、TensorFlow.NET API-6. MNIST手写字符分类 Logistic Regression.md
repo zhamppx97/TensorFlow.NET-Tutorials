@@ -136,7 +136,9 @@ H(p(x))表示信息熵，从上述公式可以看出，**相对熵 = 交叉熵 -
 
 我们结合softmax公式来一起看下交叉熵loss的完整求导：
 
-我们的交叉熵loss(C)对于神经元的输出(z_i)的梯度为<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225214458.png" alt="image-20200804225214458" style="zoom:80%;" />
+我们的交叉熵loss(C)对于神经元的输出(z_i)的梯度为
+
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225214458.png" alt="image-20200804225214458" style="zoom:80%;" />
 
 [md格式公式：
 $$
@@ -144,7 +146,9 @@ $$
 $$
 ]，
 
-根据复合函数的链式求导法则：<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225330356.png" alt="image-20200804225330356" style="zoom:80%;" />
+根据复合函数的链式求导法则：
+
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225330356.png" alt="image-20200804225330356" style="zoom:80%;" />
 
 [md格式公式：
 $$
@@ -153,7 +157,9 @@ $$
 ]，
 
 这里是aj而不是ai的原因，是由于softmax公式的特性，它的分母包含了所有神经元的输出，所以，对于不等于i的其他输出里面，也包含着zi，所有的a都要纳入到计算范围中。因此，后面的计算需要分为i=j和i≠j两种情况求导。
-下面我们一个一个分开推导，我们将交叉熵函数C代入第一个，推导如下：<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225344340.png" alt="image-20200804225344340" style="zoom:80%;" />
+下面我们一个一个分开推导，我们将交叉熵函数C代入第一个，推导如下：
+
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225344340.png" alt="image-20200804225344340" style="zoom:80%;" />
 
 [md格式公式：
 $$
@@ -163,28 +169,36 @@ $$
 
 第2个推导如下：
 
-① i = j 的情况：<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225359291.png" alt="image-20200804225359291" style="zoom:80%;" />
+① i = j 的情况：
+
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225359291.png" alt="image-20200804225359291" style="zoom:80%;" />
 
 [md格式公式：
 $$
 {∂a_i\over{∂z_i}}={{∂({{e^{z_i}}\over{\sum_ke^{z_k}}})}\over{∂z_i}}={(e^{z_i}{1\over{\sum_ke^{z_k}}})-{{{(e^{z_i})}^2}\over{{(\sum_ke^{z_k})}^2}}}={({{e^{z_i}}\over{\sum_ke^{z_k}}})(1-{{e^{z_i}}\over{\sum_ke^{z_k}}})}={a_i(1-a_i)}
 $$
 ]
-② i ≠ j 的情况：<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225414092.png" alt="image-20200804225414092" style="zoom:80%;" />
+② i ≠ j 的情况：
+
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225414092.png" alt="image-20200804225414092" style="zoom:80%;" />
 
 [md格式公式：
 $$
 {∂a_j\over{∂z_j}}={{∂({{e^{z_i}}\over{\sum_ke^{z_k}}})}\over{∂z_i}}={-e^{z_j}({1\over{\sum_ke^{z_k}}})^2e^{z_i}}={-a_ia_j}
 $$
 ]
-接下来，我们将上面的组合：<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225426031.png" alt="image-20200804225426031" style="zoom:80%;" />
+接下来，我们将上面的组合：
+
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225426031.png" alt="image-20200804225426031" style="zoom:80%;" />
 
 [md格式公式：
 $$
 {∂C\over∂z_i}={(-{\sum\limits_jy_j{1\over{a_j}}}){∂a_j\over∂z_i}}={-{y_i\over{a_i}}a_i(1-a_i)+\sum\limits_{j≠i}{y_i\over{a_j}}a_ia_j}={-y_i+y_ia_i+\sum\limits_{j≠i}y_ja_i}={-y_i+a_i\sum_jy_j}
 $$
 ]
-最后，针对分类问题，我们给定的结果yi最终只会有一个类别是1，其他类别都是0，因此，对于分类问题，这个梯度等于：<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225445731.png" alt="image-20200804225445731" style="zoom:80%;" />
+最后，针对分类问题，我们给定的结果yi最终只会有一个类别是1，其他类别都是0，因此，对于分类问题，这个梯度等于：
+
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225445731.png" alt="image-20200804225445731" style="zoom:80%;" />
 
 [md格式公式：
 $$
