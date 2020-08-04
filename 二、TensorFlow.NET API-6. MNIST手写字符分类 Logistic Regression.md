@@ -29,11 +29,11 @@ MNIST 数据集概览：
 
 **图像的尺寸为28像素*28像素，每个像素的值为0~255的灰度值；标签为手写数字的分类值，从0到9总共10种类型的标签**，如下图所示：
 
-<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200731230648630.png" alt="image-20200731230648630" style="zoom:67%;" />
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200731230648630.png" alt="image-20200731230648630" style="zoom: 50%;" />
 
 我们也可以直接打印看下训练集前20个样本图片，可以看到手写的字体样式还是比较有多样性的：
 
-<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200731230806772.png" alt="image-20200731230806772" style="zoom:67%;" />
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200731230806772.png" alt="image-20200731230806772" style="zoom: 50%;" />
 
 针对MNIST训练集和测试集，一般的处理流程为：
 
@@ -68,11 +68,11 @@ Logistic Regression也叫逻辑回归，是一类比较特殊的算法，从它�
 
 下述这个来自 李宏毅老师《一天搞懂深度学习》书中的插图，可以方便大家理解Softmax函数：
 
-<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200801094213620.png" alt="image-20200801094213620" style="zoom:80%;" />
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200801094213620.png" alt="image-20200801094213620" style="zoom: 67%;" />
 
 举个例子，模型原来的输出可能是（1,2,3，……）这样的数据，可能是中间层或者末尾层，这样的数据无法使用交叉熵评价损失，而且数据的值的大小无法直观地体现实际预测的概率分布，也可能存在正负值或者极大极小值，所以需要进行数据的概率化处理，对于一个向量 (1,2,3)经过 Softmax 回归之后就是：
 
-<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200801094454569.png" alt="image-20200801094454569" style="zoom:67%;" />，
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200801094454569.png" alt="image-20200801094454569" style="zoom: 50%;" />，
 
 这样输出就转换为一个概率分布，方便下面的交叉熵计算。
 
@@ -110,21 +110,21 @@ Logistic Regression也叫逻辑回归，是一类比较特殊的算法，从它�
 
 信息熵主要用来表示**所有信息量的期望**，期望是试验中每次可能结果的概率乘以其结果的总和。公式如下(其中log代表ln)：
 
-<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200802154349320.png" alt="image-20200802154349320" style="zoom:80%;" />
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200802154349320.png" alt="image-20200802154349320" style="zoom: 67%;" />
 
 我们深度学习主要关注分布概率之间（预测分布概率和实际分布概率）的差异，这里有个概念为相对熵（KL散度），相对熵主要用来**衡量两个概率分布之间的差异**。公式如下(其中log代表ln)：
 
-<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200802155300739.png" alt="image-20200802155300739" style="zoom:80%;" />
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200802155300739.png" alt="image-20200802155300739" style="zoom: 67%;" />
 
 那么为什么我们要选择交叉熵来表示 预测分布概率和实际分布概率 的差异呢？
 
 将KL散度公式拆开：
 
-<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200802155518903.png" alt="image-20200802155518903" style="zoom:80%;" />
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200802155518903.png" alt="image-20200802155518903" style="zoom: 67%;" />
 
 而交叉熵公式为：
 
-<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200802155619777.png" alt="image-20200802155619777" style="zoom: 67%;" />
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200802155619777.png" alt="image-20200802155619777" style="zoom: 50%;" />
 
 H(p(x))表示信息熵，从上述公式可以看出，**相对熵 = 交叉熵 - 信息熵**
 
@@ -132,41 +132,45 @@ H(p(x))表示信息熵，从上述公式可以看出，**相对熵 = 交叉熵 -
 
 使用交叉熵还有一个前提，概率分布 p(X=x)必须要满足下述公式：
 
-<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200802160138577.png" alt="image-20200802160138577" style="zoom:80%;" />
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200802160138577.png" alt="image-20200802160138577" style="zoom: 67%;" />
 
 我们结合softmax公式来一起看下交叉熵loss的完整求导：
 
-我们的交叉熵loss(C)对于神经元的输出(z_i)的梯度为
+我们的交叉熵loss(C)对于神经元的输出(z_i)的梯度为<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225214458.png" alt="image-20200804225214458" style="zoom:80%;" />[md格式公式：
 $$
 {∂C}\over{∂z_i}
 $$
-，根据复合函数的链式求导法则：
+]，根据复合函数的链式求导法则：<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225330356.png" alt="image-20200804225330356" style="zoom:80%;" />[md格式公式：
 $$
 {{∂C}\over{∂z_i}}={{{∂C}\over{∂a_j}}{{∂a_j}\over{∂z_i}}}
 $$
-，这里是aj而不是ai的原因，是由于softmax公式的特性，它的分母包含了所有神经元的输出，所以，对于不等于i的其他输出里面，也包含着zi，所有的a都要纳入到计算范围中。因此，后面的计算需要分为i=j和i≠j两种情况求导。
-下面我们一个一个分开推导，我们将交叉熵函数C代入第一个，推导如下：
+]，这里是aj而不是ai的原因，是由于softmax公式的特性，它的分母包含了所有神经元的输出，所以，对于不等于i的其他输出里面，也包含着zi，所有的a都要纳入到计算范围中。因此，后面的计算需要分为i=j和i≠j两种情况求导。
+下面我们一个一个分开推导，我们将交叉熵函数C代入第一个，推导如下：<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225344340.png" alt="image-20200804225344340" style="zoom:80%;" />[md格式公式：
 $$
 {{∂C}\over{∂a_j}}={{∂{(-{\sum{_{j}y_jlna_j}})}}\over{∂a_j}}={-{\sum\limits_jy_j{1\over{a_j}}}}
 $$
-，第2个推导如下：
+]，第2个推导如下：
 
-① i = j 的情况：
+① i = j 的情况：<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225359291.png" alt="image-20200804225359291" style="zoom:80%;" />[md格式公式：
 $$
 {∂a_i\over{∂z_i}}={{∂({{e^{z_i}}\over{\sum_ke^{z_k}}})}\over{∂z_i}}={(e^{z_i}{1\over{\sum_ke^{z_k}}})-{{{(e^{z_i})}^2}\over{{(\sum_ke^{z_k})}^2}}}={({{e^{z_i}}\over{\sum_ke^{z_k}}})(1-{{e^{z_i}}\over{\sum_ke^{z_k}}})}={a_i(1-a_i)}
 $$
-② i ≠ j 的情况：
+]
+② i ≠ j 的情况：<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225414092.png" alt="image-20200804225414092" style="zoom:80%;" />[md格式公式：
 $$
 {∂a_j\over{∂z_j}}={{∂({{e^{z_i}}\over{\sum_ke^{z_k}}})}\over{∂z_i}}={-e^{z_j}({1\over{\sum_ke^{z_k}}})^2e^{z_i}}={-a_ia_j}
 $$
-接下来，我们将上面的组合：
+]
+接下来，我们将上面的组合：<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225426031.png" alt="image-20200804225426031" style="zoom:80%;" />[md格式公式：
 $$
 {∂C\over∂z_i}={(-{\sum\limits_jy_j{1\over{a_j}}}){∂a_j\over∂z_i}}={-{y_i\over{a_i}}a_i(1-a_i)+\sum\limits_{j≠i}{y_i\over{a_j}}a_ia_j}={-y_i+y_ia_i+\sum\limits_{j≠i}y_ja_i}={-y_i+a_i\sum_jy_j}
 $$
-最后，针对分类问题，我们给定的结果yi最终只会有一个类别是1，其他类别都是0，因此，对于分类问题，这个梯度等于：
+]
+最后，针对分类问题，我们给定的结果yi最终只会有一个类别是1，其他类别都是0，因此，对于分类问题，这个梯度等于：<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225445731.png" alt="image-20200804225445731" style="zoom:80%;" />[md格式公式：
 $$
 {∂C\over∂z_i}=a_i-y_i=a_i-1
 $$
+]
 求导公式一下子看起来十分简洁，我们算得的梯度就是神经元的输出-1，我们只需要正向求出Y的预测值，将结果减1就是反向更新的梯度，导数的计算是不是变得非常简单！
 
 这就是为什么我们使用Softmax回归对输出地数据先进行处理，本来模型对于一张图片的输出是不符合概率分布的，经过Softmax回归转化之后，就可以使用交叉熵来衡量了，同时loss的求导公式也大大简化。
