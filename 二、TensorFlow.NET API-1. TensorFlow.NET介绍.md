@@ -14,7 +14,7 @@ SciSharp STACK的机器学习工具库和微软官方的库最大的区别是：
 
   <img src="TensorFlow.NET教程.assets/1584579727420.png" alt="1584579727420" style="zoom: 38%;" />
 
-- **微软 ML.NET底层集成算法**
+- **微软 ML.NET 底层集成算法**
 
   <img src="TensorFlow.NET教程.assets/image-20200321145202603.png" alt="image-20200321145202603" style="zoom:50%;" />
 
@@ -23,5 +23,11 @@ SciSharp STACK的机器学习工具库和微软官方的库最大的区别是：
   URL: https://www.tensorflow.org/versions/r2.0/api_docs
 
   <img src="TensorFlow.NET教程.assets/image-20200103221645691.png" alt="image-20200103221645691" style="zoom:68%;" />
+  
+- **微软 F# 官方主推的大数据框架**
+
+  <img src="二、TensorFlow.NET API-1. TensorFlow.NET介绍.assets/image-20200730224849886.png" alt="image-20200730224849886" style="zoom:80%;" />![image-20200730225415356](二、TensorFlow.NET API-1. TensorFlow.NET介绍.assets/image-20200730225415356.png)
+
+  ![image-20200730225415356](二、TensorFlow.NET API-1. TensorFlow.NET介绍.assets/image-20200730225415356.png)
 
 
