@@ -178,6 +178,7 @@ $$
 {∂a_i\over{∂z_i}}={{∂({{e^{z_i}}\over{\sum_ke^{z_k}}})}\over{∂z_i}}={(e^{z_i}{1\over{\sum_ke^{z_k}}})-{{{(e^{z_i})}^2}\over{{(\sum_ke^{z_k})}^2}}}={({{e^{z_i}}\over{\sum_ke^{z_k}}})(1-{{e^{z_i}}\over{\sum_ke^{z_k}}})}={a_i(1-a_i)}
 $$
 ]
+
 ② i ≠ j 的情况：
 
 <img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225414092.png" alt="image-20200804225414092" style="zoom:80%;" />
@@ -187,6 +188,7 @@ $$
 {∂a_j\over{∂z_j}}={{∂({{e^{z_i}}\over{\sum_ke^{z_k}}})}\over{∂z_i}}={-e^{z_j}({1\over{\sum_ke^{z_k}}})^2e^{z_i}}={-a_ia_j}
 $$
 ]
+
 接下来，我们将上面的组合：
 
 <img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225426031.png" alt="image-20200804225426031" style="zoom:80%;" />
@@ -196,6 +198,7 @@ $$
 {∂C\over∂z_i}={(-{\sum\limits_jy_j{1\over{a_j}}}){∂a_j\over∂z_i}}={-{y_i\over{a_i}}a_i(1-a_i)+\sum\limits_{j≠i}{y_i\over{a_j}}a_ia_j}={-y_i+y_ia_i+\sum\limits_{j≠i}y_ja_i}={-y_i+a_i\sum_jy_j}
 $$
 ]
+
 最后，针对分类问题，我们给定的结果yi最终只会有一个类别是1，其他类别都是0，因此，对于分类问题，这个梯度等于：
 
 <img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804225445731.png" alt="image-20200804225445731" style="zoom:80%;" />
@@ -205,6 +208,7 @@ $$
 {∂C\over∂z_i}=a_i-y_i=a_i-1
 $$
 ]
+
 求导公式一下子看起来十分简洁，我们算得的梯度就是神经元的输出-1，我们只需要正向求出Y的预测值，将结果减1就是反向更新的梯度，导数的计算是不是变得非常简单！
 
 这就是为什么我们使用Softmax回归对输出地数据先进行处理，本来模型对于一张图片的输出是不符合概率分布的，经过Softmax回归转化之后，就可以使用交叉熵来衡量了，同时loss的求导公式也大大简化。
@@ -229,11 +233,13 @@ clip_by_value<T1,T2>(Tensor t, T1 clip_value_min, T2 clip_value_max, string name
 
 
 
+
+
 ### 6.2 TensorFlow.NET 代码实操
 
 终于到了代码实操的环节，我们先通过一个简明图示快速回顾一下 MNIST Logistic Regression 的完整流程：
 
-
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804232357076.png" alt="image-20200804232357076" style="zoom:67%;" />
 
 
 
