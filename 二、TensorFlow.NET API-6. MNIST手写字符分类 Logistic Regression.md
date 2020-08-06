@@ -239,29 +239,369 @@ clip_by_value<T1,T2>(Tensor t, T1 clip_value_min, T2 clip_value_max, string name
 
 终于到了代码实操的环节，我们先通过一个简明图示快速回顾一下 MNIST Logistic Regression 的完整流程：
 
-<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200804232357076.png" alt="image-20200804232357076" style="zoom:67%;" />
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200806222218948.png" alt="image-20200806222218948" style="zoom:67%;" />
 
 
 
+按照这个流程图，我们来逐步讲解代码。
 
 
 
+**① 创建项目**
 
-C:\Users\Administrator\AppData\Local\Temp
+打开Visual Studio 2019，创建新项目：
 
-![image-20200730234021066](二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200730234021066.png)
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200805230326075.png" alt="image-20200805230326075" style="zoom: 67%;" />
 
-
-
-
-
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200805230725830.png" alt="image-20200805230725830" style="zoom:67%;" />
 
 
 
+选择 .NET Core，输入项目名称 LogisticRegression ，点击 Create 按钮创建：
+
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200805230820661.png" alt="image-20200805230820661" style="zoom:67%;" />
+
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200805230938052.png" alt="image-20200805230938052" style="zoom:67%;" />
 
 
 
+设置项目属性，目标框架为 .NET Core 3.1 （基于.NET Standard框架开发，因此 .NET Framework 4.7.2 以上也支持），目标平台为 x64，C# 需要 8.0 或以上版本：
 
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200805231427582.png" alt="image-20200805231427582" style="zoom:67%;" />
+
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200805231523477.png" alt="image-20200805231523477" style="zoom:67%;" />
+
+
+
+**② Nuget 安装必要的类库**
+
+通过 Nuget 安装 TensorFlow.NET 0.20.0 及以上版本 和 SciSharp.TensorFlow.Redist 2.3.0 及以上版本 。
+
+如果需要使用GPU，请将 SciSharp.TensorFlow.Redist 替换为 SciSharp.TensorFlow.Redist-Windows-GPU 。
+
+推荐直接使用 Visual Studio 的 Nuget 图形化管理工具，你也可以通过控制台的命令方式进来安装，示例如下：
+
+```
+### install tensorflow C# binding
+PM> Install-Package TensorFlow.NET
+
+### Install tensorflow binary
+### For CPU version
+PM> Install-Package SciSharp.TensorFlow.Redist
+
+### For GPU version (CUDA and cuDNN are required)
+PM> Install-Package SciSharp.TensorFlow.Redist-Windows-GPU
+```
+
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200805231802868.png" alt="image-20200805231802868" style="zoom:67%;" />
+
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200805233348459.png" alt="image-20200805233348459" style="zoom:67%;" />
+
+
+
+**③ 引用类库**
+
+引用 Tensorflow 和 Tensorflow.Binding 如下：
+
+```c#
+using System;
+using Tensorflow;
+using static Tensorflow.Binding;
+```
+
+
+
+**④ 声明并初始化各变量和超参数**
+
+```c#
+int training_epochs = 1000;
+int? train_size = null;
+int validation_size = 5000;
+int? test_size = null;
+int batch_size = 256;
+int num_classes = 10; // 0 to 9 digits
+int num_features = 784; // 28*28 pixel
+float learning_rate = 0.01f;
+int display_step = 50;
+float accuracy = 0f;
+```
+
+
+
+**⑤ 载入MNIST并进行数据预处理**
+
+主要的数据预处理为：
+
+数据展平 → 归一化 → 数据集复制 repeat() → 打乱 shuffle() → 生成 batch → 预读取 prefetch ，后面4步 直接操作dataset数据类型，会在训练过程中 自动进行异步加载和预处理，训练和载入数据这2个过程通过队列方式自动地并行处理，大大提高了效率。
+
+MNIST数据会自动从官网下载并保存在本机硬盘的临时文件夹，地址为 C:\Users\Administrator\AppData\Local\Temp，如下所示：
+
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200730234021066.png" alt="image-20200730234021066" style="zoom: 80%;" />
+
+代码如下：
+
+```c#
+Datasets<MnistDataSet> mnist;
+
+// Prepare MNIST data.From http://yann.lecun.com/exdb/mnist/
+var ((x_train, y_train), (x_test, y_test)) = tf.keras.datasets.mnist.load_data();
+// Flatten images to 1-D vector of 784 features (28*28).
+(x_train, x_test) = (x_train.reshape((-1, num_features)), x_test.reshape((-1, num_features)));
+// Normalize images value from [0, 255] to [0, 1].
+(x_train, x_test) = (x_train / 255f, x_test / 255f);
+
+// Use tf.data API to shuffle and batch data.
+var train_data = tf.data.Dataset.from_tensor_slices(x_train, y_train);
+train_data = train_data.repeat().shuffle(5000).batch(batch_size).prefetch(1);
+```
+
+
+
+**⑥ 初始化参数w和b**
+
+这里的输出 x 的 shape 为 (60000,784)，输出 One-Hot 标签 y 的 shape 为 (60000,10)，因此初始化 权重 w 的 shape 为 (784,10)，偏置项 b 的 shape 为 (10)。
+
+```c#
+// Weight of shape [784, 10], the 28*28 image features, and total number of classes.
+var W = tf.Variable(tf.ones((num_features, num_classes)), name: "weight");
+// Bias of shape [10], the total number of classes.
+var b = tf.Variable(tf.zeros(num_classes), name: "bias");
+```
+
+
+
+**⑦ 构建 逻辑回归函数、损失函数、准确度函数和优化器**
+
+- **逻辑回归函数 logistic regression**：
+
+  y = x * W + b ；
+
+- **交叉熵损失函数 cross entropy**（这里使用了 **clip_by_value函数** 防止出现 log(0) 的异常情况）：<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200802155619777.png" alt="image-20200802155619777" style="zoom: 50%;" /> ；
+
+- **预测准确度 accuracy**：
+
+  softmax 预测输出的概率向量 通过 argmax 函数找出最大概率对应的标签，再和正确的标签比较得到预测准确度 ；
+
+- **SDG 随机梯度下降 优化器 optimizer**：
+
+  小批量随机梯度下降算法每次只随机选择一个batch来更新模型参数，因此每次的学习是非常快速的，既兼顾了速度，同时降低了收敛波动性，即降低了参数更新的方差，使得更新更加稳定。
+
+```c#
+Func<Tensor, Tensor> logistic_regression = x
+    => tf.nn.softmax(tf.matmul(x, W) + b);
+
+Func<Tensor, Tensor, Tensor> cross_entropy = (y_pred, y_true) =>
+{
+    y_true = tf.cast(y_true, TF_DataType.TF_UINT8);
+    // Encode label to a one hot vector.
+    y_true = tf.one_hot(y_true, depth: num_classes);
+    // Clip prediction values to avoid log(0) error.
+    y_pred = tf.clip_by_value(y_pred, 1e-9f, 1.0f);
+    // Compute cross-entropy.
+    return tf.reduce_mean(-tf.reduce_sum(y_true * tf.math.log(y_pred), 1));
+};
+
+Func<Tensor, Tensor, Tensor> Accuracy = (y_pred, y_true) =>
+{
+    // Predicted class is the index of highest score in prediction vector (i.e. argmax).
+    var correct_prediction = tf.equal(tf.argmax(y_pred, 1), tf.cast(y_true, tf.int64));
+    return tf.reduce_mean(tf.cast(correct_prediction, tf.float32));
+};
+
+// Stochastic gradient descent optimizer.
+var optimizer = tf.optimizers.SGD(learning_rate);
+
+Action<Tensor, Tensor> run_optimization = (x, y) =>
+{
+    // Wrap computation inside a GradientTape for automatic differentiation.
+    using var g = tf.GradientTape();
+    var pred = logistic_regression(x);
+    var loss = cross_entropy(pred, y);
+
+    // Compute gradients.
+    var gradients = g.gradient(loss, (W, b));
+
+    // Update W and b following gradients.
+    optimizer.apply_gradients(zip(gradients, (W, b)));
+};
+```
+
+
+
+**⑧ 加载数据并进行训练**
+
+按照batch方式加载数据并执行优化器进行训练，每间隔50次学习，输出1次训练的准确率，方便观察梯度下降。
+
+```c#
+train_data = train_data.take(training_epochs);
+// Run training for the given number of steps.
+foreach (var (step, (batch_x, batch_y)) in enumerate(train_data, 1))
+{
+    // Run the optimization to update W and b values.
+    run_optimization(batch_x, batch_y);
+
+    if (step % display_step == 0)
+    {
+        var pred = logistic_regression(batch_x);
+        var loss = cross_entropy(pred, batch_y);
+        var acc = Accuracy(pred, batch_y);
+        print($"step: {step}, loss: {(float)loss}, accuracy: {(float)acc}");
+        accuracy = acc.numpy();
+    }
+}
+```
+
+
+
+**⑨ 训练完成 在测试集上 评估模型的准确度**
+
+测试集是从原始数据集单独拆分出来的数据，测试集不参与训练过程，以提高评估结果的真实准确性。
+
+```c#
+// Test model on validation set.
+{
+    var pred = logistic_regression(x_test);
+    print($"Test Accuracy: {(float)Accuracy(pred, y_test)}");
+}
+```
+
+
+
+以上，就是 MNIST Logistic Regression 的代码说明，完整代码如下：
+
+```c#
+using System;
+using Tensorflow;
+using static Tensorflow.Binding;
+
+
+namespace LogisticRegression
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            int training_epochs = 1000;
+            int? train_size = null;
+            int validation_size = 5000;
+            int? test_size = null;
+            int batch_size = 256;
+            int num_classes = 10; // 0 to 9 digits
+            int num_features = 784; // 28*28
+            float learning_rate = 0.01f;
+            int display_step = 50;
+            float accuracy = 0f;
+
+            Datasets<MnistDataSet> mnist;
+
+            // Prepare MNIST data.From http://yann.lecun.com/exdb/mnist/
+            var ((x_train, y_train), (x_test, y_test)) = tf.keras.datasets.mnist.load_data();
+            // Flatten images to 1-D vector of 784 features (28*28).
+            (x_train, x_test) = (x_train.reshape((-1, num_features)), x_test.reshape((-1, num_features)));
+            // Normalize images value from [0, 255] to [0, 1].
+            (x_train, x_test) = (x_train / 255f, x_test / 255f);
+
+            // Use tf.data API to shuffle and batch data.
+            var train_data = tf.data.Dataset.from_tensor_slices(x_train, y_train);
+            train_data = train_data.repeat().shuffle(5000).batch(batch_size).prefetch(1);
+
+            // Weight of shape [784, 10], the 28*28 image features, and total number of classes.
+            var W = tf.Variable(tf.ones((num_features, num_classes)), name: "weight");
+            // Bias of shape [10], the total number of classes.
+            var b = tf.Variable(tf.zeros(num_classes), name: "bias");
+
+            Func<Tensor, Tensor> logistic_regression = x
+            => tf.nn.softmax(tf.matmul(x, W) + b);
+
+            Func<Tensor, Tensor, Tensor> cross_entropy = (y_pred, y_true) =>
+            {
+                y_true = tf.cast(y_true, TF_DataType.TF_UINT8);
+                // Encode label to a one hot vector.
+                y_true = tf.one_hot(y_true, depth: num_classes);
+                // Clip prediction values to avoid log(0) error.
+                y_pred = tf.clip_by_value(y_pred, 1e-9f, 1.0f);
+                // Compute cross-entropy.
+                return tf.reduce_mean(-tf.reduce_sum(y_true * tf.math.log(y_pred), 1));
+            };
+
+            Func<Tensor, Tensor, Tensor> Accuracy = (y_pred, y_true) =>
+            {
+                // Predicted class is the index of highest score in prediction vector (i.e. argmax).
+                var correct_prediction = tf.equal(tf.argmax(y_pred, 1), tf.cast(y_true, tf.int64));
+                return tf.reduce_mean(tf.cast(correct_prediction, tf.float32));
+            };
+
+            // Stochastic gradient descent optimizer.
+            var optimizer = tf.optimizers.SGD(learning_rate);
+
+            Action<Tensor, Tensor> run_optimization = (x, y) =>
+            {
+                // Wrap computation inside a GradientTape for automatic differentiation.
+                using var g = tf.GradientTape();
+                var pred = logistic_regression(x);
+                var loss = cross_entropy(pred, y);
+
+                // Compute gradients.
+                var gradients = g.gradient(loss, (W, b));
+
+                // Update W and b following gradients.
+                optimizer.apply_gradients(zip(gradients, (W, b)));
+            };
+
+            train_data = train_data.take(training_epochs);
+            // Run training for the given number of steps.
+            foreach (var (step, (batch_x, batch_y)) in enumerate(train_data, 1))
+            {
+                // Run the optimization to update W and b values.
+                run_optimization(batch_x, batch_y);
+
+                if (step % display_step == 0)
+                {
+                    var pred = logistic_regression(batch_x);
+                    var loss = cross_entropy(pred, batch_y);
+                    var acc = Accuracy(pred, batch_y);
+                    print($"step: {step}, loss: {(float)loss}, accuracy: {(float)acc}");
+                    accuracy = acc.numpy();
+                }
+            }
+
+            // Test model on validation set.
+            {
+                var pred = logistic_regression(x_test);
+                print($"Test Accuracy: {(float)Accuracy(pred, y_test)}");
+            }
+        }
+    }
+}
+```
+
+
+
+我们执行代码，可以得到下述的训练过程和最终测试准确率 0.8705 的输出，如下：
+
+```
+step: 50, loss: 1.8277006, accuracy: 0.765625
+step: 100, loss: 1.5701814, accuracy: 0.76171875
+step: 150, loss: 1.3460401, accuracy: 0.7890625
+step: 200, loss: 1.1219568, accuracy: 0.84765625
+step: 250, loss: 1.068185, accuracy: 0.82421875
+step: 300, loss: 0.9891944, accuracy: 0.8359375
+step: 350, loss: 0.95458114, accuracy: 0.8203125
+step: 400, loss: 0.90177447, accuracy: 0.83203125
+step: 450, loss: 0.76447237, accuracy: 0.90234375
+step: 500, loss: 0.7681235, accuracy: 0.85546875
+step: 550, loss: 0.77639115, accuracy: 0.83984375
+step: 600, loss: 0.686398, accuracy: 0.87890625
+step: 650, loss: 0.72847867, accuracy: 0.84765625
+step: 700, loss: 0.6082872, accuracy: 0.91015625
+step: 750, loss: 0.67221904, accuracy: 0.86328125
+step: 800, loss: 0.6744563, accuracy: 0.8515625
+step: 850, loss: 0.7164457, accuracy: 0.83203125
+step: 900, loss: 0.65362364, accuracy: 0.83203125
+step: 950, loss: 0.5537889, accuracy: 0.90625
+step: 1000, loss: 0.5606159, accuracy: 0.87109375
+Test Accuracy: 0.8705
+```
 
 
 
