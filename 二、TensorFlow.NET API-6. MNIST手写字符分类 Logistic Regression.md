@@ -610,3 +610,16 @@ Test Accuracy: 0.8705
 ### 6.3 视频教程
 
 视频教程链接地址（或扫描下面的二维码）：
+
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200808092233479.png" alt="image-20200808092233479" style="zoom:80%;" />
+
+
+
+
+
+### 6.4 代码下载地址
+
+代码下载链接地址（或扫描下面的二维码）：
+
+
+
