@@ -609,7 +609,7 @@ Test Accuracy: 0.8705
 
 ### 6.3 视频教程
 
-视频教程链接地址（或扫描下面的二维码）：
+视频教程链接地址（或扫描下面的二维码）：https://www.bilibili.com/video/BV1wf4y117qF/?p=4
 
 <img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200808092233479.png" alt="image-20200808092233479" style="zoom:80%;" />
 
@@ -619,7 +619,9 @@ Test Accuracy: 0.8705
 
 ### 6.4 代码下载地址
 
-代码下载链接地址（或扫描下面的二维码）：
+代码下载链接地址（或扫描下面的二维码）：https://github.com/SciSharp/TensorFlow.NET-Tutorials/tree/master/PracticeCode/LogisticRegression
+
+<img src="二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression.assets/image-20200808094645739.png" alt="image-20200808094645739" style="zoom:80%;" />
 
 
 

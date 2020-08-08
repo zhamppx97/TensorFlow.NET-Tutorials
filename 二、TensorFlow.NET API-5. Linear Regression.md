@@ -172,4 +172,6 @@ step: 1000, loss: 0.15439445, W: 0.26092294, b: 0.7329534
 
 ### 5.5 代码下载地址
 
-代码下载链接地址（或扫描下面的二维码）：
+代码下载链接地址（或扫描下面的二维码）：https://github.com/SciSharp/TensorFlow.NET-Tutorials/tree/master/PracticeCode/LinearRegression
+
+<img src="二、TensorFlow.NET API-5. Linear Regression.assets/image-20200808094525802.png" alt="image-20200808094525802" style="zoom:80%;" />
