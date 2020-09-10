@@ -473,7 +473,94 @@ Test Accuracy: 0.8954
 
 
 
-### 8.3 TensorFlow.NET 代码实操 2 - DNN with Keras
+### 8.3 TensorFlow.NET 2.x 中模型构建的三种方式
+
+TensorFlow.NET 2.x 提供了3种定义模型的方式：
+
+1. **Sequential API （序列模型）：按层顺序创建模型**
+2. **Functional API （函数式模型）：函数式API创建任意结构模型**
+3. **Model Subclassing （自定义模型）：Model子类化创建自定义模型**
+
+
+
+推荐的使用优先级：
+
+优先使用 Sequential API 进行模型的快速搭建，如果无法满足需求（共享层或多输入等），再考虑采用 Functional API 创建自定义结构的模型，如果仍然无法满足需求（需要自定义控制 Train 过程或研发创新想法），最后也可以考虑 Model Subclassing。
+
+
+
+针对各种场景，TensorFlow.NET 都提供了对应的快速解决方案，接下来我们来详细说明下这3种模型搭建的方式。
+
+
+
+#### **8.3.1 Sequential API （序列模型）**
+
+这是 Keras 最简单的构建模型方式（也许是所有框架中最简单构建方式），它**顺序地**把所有模型层**依次定义**，然后使用内置的训练循环 model.fit 对模型进行训练， 搭建模型和训练的过程就像“搭建乐高积木”一样简单。
+
+但序列模型是 layer-by-layer 的，某些场景的使用略有限制：
+
+- 无法共享网络层
+- 不能创建多分支结构
+- 不能有多个输入
+
+
+
+这种方式特别适用于经典网络模型，如：LeNet，AlexNet，VGGNet ，模型结构如图所示：
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.assets/1599614422372.png" alt="1599614422372" style="zoom:67%;" />
+
+
+
+Sequential 方式一般的代码流程如下：
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.assets/1599615428856.png" alt="1599615428856" style="zoom:50%;" />
+
+
+
+//TODO: TensorFlow.NET的代码示例待完成后添加
+
+
+
+
+
+#### **8.3.2 Functional API （函数式模型）**
+
+简单的 Sequential 堆叠方式有时候不能表示任意结构的神经网络。为此， Keras 提供了 Functional API， 帮助我们建立更为复杂和灵活的模型，它可以处理非线性拓扑、具有共享层的模型和具有多个输入或输出的模型。其使用方法是将层作为可调用的对象并返回张量，并将输入向量和输出向量提供给 Model 的 inputs 和 outputs 参数。
+
+Functional API 有如下更强的功能：
+
+- 定义更复杂的模型
+- 支持多输入多输出
+- 可以定义模型分支，比如inception block ， resnet block
+- 方便layer共享 
+
+
+
+实际上，任意的 Sequential 模型 都可以使用 Functional 方式实现，Functional 方式特别适用于一些复杂的网络模型，如：ResNet，GoogleNet/Inception，Xception，SqueezeNet 等，模型结构如图所示：
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.assets/1599616716881.png" alt="1599616716881" style="zoom:67%;" />
+
+
+
+Functional 方式一般的代码流程如下：
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.assets/1599618575637.png" alt="1599618575637" style="zoom: 50%;" />
+
+
+
+//TODO: TensorFlow.NET的代码示例待完成后添加
+
+
+
+
+
+#### **8.3.3 Model Subclassing （自定义模型）**
+
+Functional API 通过继承 Model 来编写自己的模型类，如果仍然无法满足需求，则可以通过 Model 子类化创建自定义模型，主要为自定义层（继承 Layer 类）、自定义损失函数（继承 Loss 类）和自定义评价函数（继承 Metric 类）。
+
+从开发人员的角度来看，这种工作方式是扩展框架定义的模型类，实例化层，然后编写模型的正向传递。TensorFlow.NET 2.x通过 Keras Subclassing API 支持这种开箱即用的方式，在 Keras 中 Model 类作为基本的类，可以在此基础上，进行任意的自定义操作，对模型的所有部分（包括训练过程）进行控制。 
+
+我们先来了解下 Keras 模型类的定义示意图：
 
 
 
@@ -481,7 +568,25 @@ Test Accuracy: 0.8954
 
 
 
-### 8.4 视频教程
+
+
+
+
+
+
+
+
+
+
+### 8.4 TensorFlow.NET 代码实操 2 - DNN with Keras
+
+
+
+
+
+
+
+### 8.5 视频教程
 
 视频教程链接地址（或扫描下面的二维码）：
 
@@ -489,7 +594,7 @@ Test Accuracy: 0.8954
 
 
 
-### 8.5 代码下载地址
+### 8.6 代码下载地址
 
 DNN_Eager 代码下载链接地址（或扫描下面的二维码）：
 
