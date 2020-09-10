@@ -556,23 +556,58 @@ Functional 方式一般的代码流程如下：
 
 #### **8.3.3 Model Subclassing （自定义模型）**
 
-Functional API 通过继承 Model 来编写自己的模型类，如果仍然无法满足需求，则可以通过 Model 子类化创建自定义模型，主要为自定义层（继承 Layer 类）、自定义损失函数（继承 Loss 类）和自定义评价函数（继承 Metric 类）。
+Functional API 通过继承 Model 来编写自己的模型类，如果仍然无法满足需求，则可以通过 Model 子类化创建自定义模型，主要为自定义层（可以继承 Layer 类）、自定义损失函数（可以继承 Loss 类）和自定义评价函数（可以继承 Metric 类）。
 
 从开发人员的角度来看，这种工作方式是扩展框架定义的模型类，实例化层，然后编写模型的正向传递。TensorFlow.NET 2.x通过 Keras Subclassing API 支持这种开箱即用的方式，在 Keras 中 Model 类作为基本的类，可以在此基础上，进行任意的自定义操作，对模型的所有部分（包括训练过程）进行控制。 
 
-我们先来了解下 Keras 模型类的定义示意图：
+我们先来了解下 Keras 模型类的自定义示意图：
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.assets/1599722442575.png" alt="1599722442575" style="zoom:50%;" />
 
 
 
+然后，我们通过示例代码来了解 Model Subclassing 方式的具体流程。
+
+自定义模型需要继承 Tensorflow.Keras.Engine.Model 类，然后在构造函数中初始化所需要的层（可以使用 keras 的层或者继承 Layer 进行自定义层），并重载 call() 方法进行模型的调用，建立输入和输出之间的函数关系。
+
+代码结构如下：
+
+```c#
+public class MyModel : Model
+{
+    Layer myLayer1;
+    Layer myLayer2;
+    Layer output;
+
+    public MyModel(ModelArgs args) : 
+    base(args)
+    {
+        // First layer.
+        myLayer1 = Layer.xxx;
+
+        // Second layer.
+        myLayer2 = Layer.xxx;
+
+        output = Layer.xxx;
+    }
+
+    // Set forward pass.
+    protected override Tensor call(Tensor inputs)
+    {
+        inputs = myLayer1.Apply(inputs);
+        inputs = myLayer2.Apply(inputs);
+        inputs = output.Apply(inputs);
+
+        return inputs;
+    }
+}
+```
 
 
 
+以上的代码说明了自定义模型的方法，类似地也可以自定义层、损失函数和评估函数。
 
-
-
-
-
-
+ps：实际上，通过Mode Subclassing 方式自定义的模型，也可以使用 Sequential 或者 Functional API，其中自定义的 Layer 需要添加 get_config 方法以序列化组合模型。
 
 
 
