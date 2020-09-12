@@ -473,9 +473,9 @@ Test Accuracy: 0.8954
 
 
 
-### 8.3 TensorFlow.NET 2.x 中模型构建的三种方式
+### 8.3 TensorFlow.NET Keras 模型构建的三种方式
 
-TensorFlow.NET 2.x 提供了3种定义模型的方式：
+TensorFlow.NET 2.x 提供了3种定义 Keras 模型的方式：
 
 1. **Sequential API （序列模型）：按层顺序创建模型**
 2. **Functional API （函数式模型）：函数式API创建任意结构模型**
@@ -614,6 +614,79 @@ ps：实际上，通过Mode Subclassing 方式自定义的模型，也可以使�
 
 
 ### 8.4 TensorFlow.NET 代码实操 2 - DNN with Keras
+
+Keras 方式的 DNN 实现流程和上述第2节中的 Eager 方式类似，差异部分主要是使用了 Keras 的全连接层（Dense）替代了 Eager 方式中的 “线性变换+激活函数”。
+
+TensorFlow.NET 2.x 主要推荐使用 Keras 进行模型搭建和训练，Keras 是一个高级神经网络 API，可以实现简单、快速和灵活地搭建网络模型。自从2017年 TensorFlow 1.2 开始，Keras 就从一个独立运行后端，变为 TensorFlow 的核心内置 API，一直到 TensorFlow 2.0 发布后，Keras 由 TensorFlow 官方推荐给广大开发者，替代  TF-Slim 作为官方默认的深度学习开发的首选框架。
+
+Keras 有2个比较重要的概念：模型（Model）和层（Layer）。层（Layer）将常用的神经网络层进行了封装（全连接层、卷积层、池化层等），模型（Model）将各个层进行连接，并封装成一个完整的网络模型。模型调用的时候，使用 y_pred = model (x) 的形式即可。
+
+Keras 在 Tensorflow.Keras.Engine.Layer 下内置了深度学习中常用的网络层，同时也支持继承并自定义层。
+
+模型（Model）作为类的方式构造，通过继承 Tensorflow.Keras.Engine.Model 这个类在定义自己的模型。在继承类中，我们需要重写该类的构造函数进行初始化（初始化模型需要的层和组织结构），并通过重载 call( ) 方法来进行模型的调用，同时支持增加自定义方法。
+
+本次 DNN 案例中，我们主要使用 Keras 中的全连接层。 全连接层（Fully-connected Layer，Tensorflow.Keras.Engine.Layer.Dense）是 Keras 中最基础和常用的层之一，对输入矩阵 x 进行 f ( x w + b)的线性变换 + 激活函数操作。Dense 层的函数如下图所示：
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.assets/1599894854723.png" alt="1599894854723" style="zoom:50%;" />
+
+
+
+Dense 层主要有下述2个参数：
+
+- 参数1：units，int 类型，输出张量的维度；int units, Activation activation；
+- 参数2：activation，Tensorflow.Keras.Activation 类型，激活函数（常用的激活函数有 Linear，Relu，Sigmoid，Tanh）。
+
+
+
+接下来我们通过代码来逐步实操 Keras 下的 DNN 。
+
+
+
+**① 新建项目，配置环境和引用：**
+
+新建项目。
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.assets/1599896878857.png" alt="1599896878857" style="zoom: 80%;" />
+
+选择 .NET Core 框架。
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.assets/1599896909869.png" alt="1599896909869" style="zoom: 80%;" />
+
+输入项目名，DNN_Keras。
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.assets/1599896975534.png" alt="1599896975534" style="zoom: 80%;" />
+
+确认 .NET Core 版本为 3.0 及以上。
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.assets/1599897027700.png" alt="1599897027700" style="zoom: 80%;" />
+
+选择目标平台为 x64 。
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.assets/1599897080350.png" alt="1599897080350" style="zoom:80%;" />
+
+使用 NuGet 安装 TensorFlow.NET 和 SciSharp.TensorFlow.Redist，如果需要使用 GPU，则安装 SciSharp.TensorFlow.Redist-Windows-GPU。
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.assets/1599897196628.png" alt="1599897196628" style="zoom:80%;" />
+
+添加项目引用。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
