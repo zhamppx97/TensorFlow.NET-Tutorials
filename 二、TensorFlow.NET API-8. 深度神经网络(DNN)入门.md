@@ -670,25 +670,428 @@ Dense 层主要有下述2个参数：
 
 添加项目引用。
 
+```c#
+using NumSharp;
+using System;
+using System.Linq;
+using Tensorflow;
+using Tensorflow.Keras;
+using Tensorflow.Keras.ArgsDefinition;
+using Tensorflow.Keras.Engine;
+using static Tensorflow.Binding;
+```
 
 
 
+**② 定义网络层参数、训练数据和超参数：**
+
+```c#
+int num_classes = 10; // 0 to 9 digits
+int num_features = 784; // 28*28 image size
+
+// Training parameters.
+float learning_rate = 0.1f;
+int display_step = 100;
+int batch_size = 256;
+int training_steps = 1000;
+
+// Train Variables
+float accuracy;
+IDatasetV2 train_data;
+NDArray x_test, y_test, x_train, y_train;
+```
 
 
 
+**③ 载入MNIST数据，并进行预处理：**
+
+数据下载 或 从本地加载 → 数据展平 → 归一化 → 转换 Dataset → 无限复制(方便后面take) / 乱序 / 生成批次 / 预加载 → 预处理后的数据提取需要的训练份数。
+
+```c#
+// Prepare MNIST data.
+((x_train, y_train), (x_test, y_test)) = tf.keras.datasets.mnist.load_data();
+// Flatten images to 1-D vector of 784 features (28*28).
+(x_train, x_test) = (x_train.reshape((-1, num_features)), x_test.reshape((-1, num_features)));
+// Normalize images value from [0, 255] to [0, 1].
+(x_train, x_test) = (x_train / 255f, x_test / 255f);
+
+// Use tf.data API to shuffle and batch data.
+train_data = tf.data.Dataset.from_tensor_slices(x_train, y_train);
+train_data = train_data.repeat()
+    .shuffle(5000)
+    .batch(batch_size)
+    .prefetch(1)
+    .take(training_steps);
+```
 
 
 
+**④ 搭建 Keras 网络模型：**
+
+Model Subclassing 方式搭建 Keras 的 DNN 网络模型，输入层参数。
+
+```c#
+// Build neural network model.
+var neural_net = new NeuralNet(new NeuralNetArgs
+                               {
+                                   NumClasses = num_classes,
+                                   NeuronOfHidden1 = 128,
+                                   Activation1 = tf.keras.activations.Relu,
+                                   NeuronOfHidden2 = 256,
+                                   Activation2 = tf.keras.activations.Relu
+                               });
+```
 
 
 
+继承 Model 类，搭建全连接神经网络 Dense Neural Net。在构造函数中创建网络的层结构，并重载 call( ) 方法，指定输入和输出之间的函数关系。
+
+```c#
+// Model Subclassing
+public class NeuralNet : Model
+{
+    Layer fc1;
+    Layer fc2;
+    Layer output;
+
+    public NeuralNet(NeuralNetArgs args) :
+    base(args)
+    {
+        // First fully-connected hidden layer.
+        fc1 = Dense(args.NeuronOfHidden1, activation: args.Activation1);
+
+        // Second fully-connected hidden layer.
+        fc2 = Dense(args.NeuronOfHidden2, activation: args.Activation2);
+
+        output = Dense(args.NumClasses);
+    }
+
+    // Set forward pass.
+    protected override Tensor call(Tensor inputs, bool is_training = false, Tensor state = null)
+    {
+        inputs = fc1.Apply(inputs);
+        inputs = fc2.Apply(inputs);
+        inputs = output.Apply(inputs);
+        if (!is_training)
+            inputs = tf.nn.softmax(inputs);
+        return inputs;
+    }
+}
+
+// Network parameters.
+public class NeuralNetArgs : ModelArgs
+{
+    /// <summary>
+    /// 1st layer number of neurons.
+    /// </summary>
+    public int NeuronOfHidden1 { get; set; }
+    public Activation Activation1 { get; set; }
+
+    /// <summary>
+    /// 2nd layer number of neurons.
+    /// </summary>
+    public int NeuronOfHidden2 { get; set; }
+    public Activation Activation2 { get; set; }
+
+    public int NumClasses { get; set; }
+}
+```
 
 
 
+**⑤ 训练模型并周期显示训练过程：**
+
+交叉熵损失函数和准确率评估函数。
+
+```c#
+// Cross-Entropy Loss.
+Func<Tensor, Tensor, Tensor> cross_entropy_loss = (x, y) =>
+{
+    // Convert labels to int 64 for tf cross-entropy function.
+    y = tf.cast(y, tf.int64);
+    // Apply softmax to logits and compute cross-entropy.
+    var loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels: y, logits: x);
+    // Average loss across the batch.
+    return tf.reduce_mean(loss);
+};
+
+// Accuracy metric.
+Func<Tensor, Tensor, Tensor> accuracy = (y_pred, y_true) =>
+{
+    // Predicted class is the index of highest score in prediction vector (i.e. argmax).
+    var correct_prediction = tf.equal(tf.argmax(y_pred, 1), tf.cast(y_true, tf.int64));
+    return tf.reduce_mean(tf.cast(correct_prediction, tf.float32), axis: -1);
+};
+```
 
 
 
+创建随机梯度下降（SDG）优化器和执行方法。
 
+```c#
+// Stochastic gradient descent optimizer.
+var optimizer = tf.optimizers.SGD(learning_rate);
+
+// Optimization process.
+Action<Tensor, Tensor> run_optimization = (x, y) =>
+{
+    // Wrap computation inside a GradientTape for automatic differentiation.
+    using var g = tf.GradientTape();
+    // Forward pass.
+    var pred = neural_net.Apply(x, is_training: true);
+    var loss = cross_entropy_loss(pred, y);
+
+    // Compute gradients.
+    var gradients = g.gradient(loss, neural_net.trainable_variables);
+
+    // Update W and b following gradients.
+    optimizer.apply_gradients(zip(gradients, neural_net.trainable_variables.Select(x => x as ResourceVariable)));
+};
+```
+
+
+
+应用 TensorFlow 2.x 中的自动求导机制，自动求导进行梯度下降和网络权重变量的更新优化。每隔一定周期，打印出当前轮次网络的训练性能数据 loss 和 accuracy 。关于自动求导机制，请参考“[6. MNIST手写字符分类 Logistic Regression](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/%E4%BA%8C%E3%80%81TensorFlow.NET%20API-6.%20MNIST%E6%89%8B%E5%86%99%E5%AD%97%E7%AC%A6%E5%88%86%E7%B1%BB%20Logistic%20Regression.md>)”一章节。
+
+```c#
+// Run training for the given number of steps.
+foreach (var (step, (batch_x, batch_y)) in enumerate(train_data, 1))
+{
+    // Run the optimization to update W and b values.
+    run_optimization(batch_x, batch_y);
+
+    if (step % display_step == 0)
+    {
+        var pred = neural_net.Apply(batch_x, is_training: true);
+        var loss = cross_entropy_loss(pred, batch_y);
+        var acc = accuracy(pred, batch_y);
+        print($"step: {step}, loss: {(float)loss}, accuracy: {(float)acc}");
+    }
+}
+```
+
+
+
+**⑥ 测试集上性能评估：**
+
+在测试集上对训练后的模型进行预测准确率性能评估。
+
+```c#
+// Test model on validation set.
+{
+    var pred = neural_net.Apply(x_test, is_training: false);
+    this.accuracy = (float)accuracy(pred, y_test);
+    print($"Test Accuracy: {this.accuracy}");
+}
+```
+
+
+
+**完整的控制台运行代码如下：**
+
+```c#
+using NumSharp;
+using System;
+using System.Linq;
+using Tensorflow;
+using Tensorflow.Keras;
+using Tensorflow.Keras.ArgsDefinition;
+using Tensorflow.Keras.Engine;
+using static Tensorflow.Binding;
+
+namespace DNN_Keras
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            DNN_Keras dnn = new DNN_Keras();
+            dnn.Main();
+        }
+    }
+
+    class DNN_Keras
+    {
+        int num_classes = 10; // 0 to 9 digits
+        int num_features = 784; // 28*28 image size
+
+        // Training parameters.
+        float learning_rate = 0.1f;
+        int display_step = 100;
+        int batch_size = 256;
+        int training_steps = 1000;
+
+        // Train Variables
+        float accuracy;
+        IDatasetV2 train_data;
+        NDArray x_test, y_test, x_train, y_train;
+
+        public void Main()
+        {
+            // Prepare MNIST data.
+            ((x_train, y_train), (x_test, y_test)) = tf.keras.datasets.mnist.load_data();
+            // Flatten images to 1-D vector of 784 features (28*28).
+            (x_train, x_test) = (x_train.reshape((-1, num_features)), x_test.reshape((-1, num_features)));
+            // Normalize images value from [0, 255] to [0, 1].
+            (x_train, x_test) = (x_train / 255f, x_test / 255f);
+
+            // Use tf.data API to shuffle and batch data.
+            train_data = tf.data.Dataset.from_tensor_slices(x_train, y_train);
+            train_data = train_data.repeat()
+                .shuffle(5000)
+                .batch(batch_size)
+                .prefetch(1)
+                .take(training_steps);
+
+
+            // Build neural network model.
+            var neural_net = new NeuralNet(new NeuralNetArgs
+            {
+                NumClasses = num_classes,
+                NeuronOfHidden1 = 128,
+                Activation1 = tf.keras.activations.Relu,
+                NeuronOfHidden2 = 256,
+                Activation2 = tf.keras.activations.Relu
+            });
+
+            // Cross-Entropy Loss.
+            Func<Tensor, Tensor, Tensor> cross_entropy_loss = (x, y) =>
+            {
+                // Convert labels to int 64 for tf cross-entropy function.
+                y = tf.cast(y, tf.int64);
+                // Apply softmax to logits and compute cross-entropy.
+                var loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels: y, logits: x);
+                // Average loss across the batch.
+                return tf.reduce_mean(loss);
+            };
+
+            // Accuracy metric.
+            Func<Tensor, Tensor, Tensor> accuracy = (y_pred, y_true) =>
+            {
+                // Predicted class is the index of highest score in prediction vector (i.e. argmax).
+                var correct_prediction = tf.equal(tf.argmax(y_pred, 1), tf.cast(y_true, tf.int64));
+                return tf.reduce_mean(tf.cast(correct_prediction, tf.float32), axis: -1);
+            };
+
+            // Stochastic gradient descent optimizer.
+            var optimizer = tf.optimizers.SGD(learning_rate);
+
+            // Optimization process.
+            Action<Tensor, Tensor> run_optimization = (x, y) =>
+            {
+                // Wrap computation inside a GradientTape for automatic differentiation.
+                using var g = tf.GradientTape();
+                // Forward pass.
+                var pred = neural_net.Apply(x, is_training: true);
+                var loss = cross_entropy_loss(pred, y);
+
+                // Compute gradients.
+                var gradients = g.gradient(loss, neural_net.trainable_variables);
+
+                // Update W and b following gradients.
+                optimizer.apply_gradients(zip(gradients, neural_net.trainable_variables.Select(x => x as ResourceVariable)));
+            };
+
+
+            // Run training for the given number of steps.
+            foreach (var (step, (batch_x, batch_y)) in enumerate(train_data, 1))
+            {
+                // Run the optimization to update W and b values.
+                run_optimization(batch_x, batch_y);
+
+                if (step % display_step == 0)
+                {
+                    var pred = neural_net.Apply(batch_x, is_training: true);
+                    var loss = cross_entropy_loss(pred, batch_y);
+                    var acc = accuracy(pred, batch_y);
+                    print($"step: {step}, loss: {(float)loss}, accuracy: {(float)acc}");
+                }
+            }
+
+            // Test model on validation set.
+            {
+                var pred = neural_net.Apply(x_test, is_training: false);
+                this.accuracy = (float)accuracy(pred, y_test);
+                print($"Test Accuracy: {this.accuracy}");
+            }
+
+        }
+
+        // Model Subclassing
+        public class NeuralNet : Model
+        {
+            Layer fc1;
+            Layer fc2;
+            Layer output;
+
+            public NeuralNet(NeuralNetArgs args) :
+                base(args)
+            {
+                // First fully-connected hidden layer.
+                fc1 = Dense(args.NeuronOfHidden1, activation: args.Activation1);
+
+                // Second fully-connected hidden layer.
+                fc2 = Dense(args.NeuronOfHidden2, activation: args.Activation2);
+
+                output = Dense(args.NumClasses);
+            }
+
+            // Set forward pass.
+            protected override Tensor call(Tensor inputs, bool is_training = false, Tensor state = null)
+            {
+                inputs = fc1.Apply(inputs);
+                inputs = fc2.Apply(inputs);
+                inputs = output.Apply(inputs);
+                if (!is_training)
+                    inputs = tf.nn.softmax(inputs);
+                return inputs;
+            }
+        }
+
+        // Network parameters.
+        public class NeuralNetArgs : ModelArgs
+        {
+            /// <summary>
+            /// 1st layer number of neurons.
+            /// </summary>
+            public int NeuronOfHidden1 { get; set; }
+            public Activation Activation1 { get; set; }
+
+            /// <summary>
+            /// 2nd layer number of neurons.
+            /// </summary>
+            public int NeuronOfHidden2 { get; set; }
+            public Activation Activation2 { get; set; }
+
+            public int NumClasses { get; set; }
+        }
+
+    }
+}
+
+```
+
+
+
+**运行结果如下：**
+
+```
+The file C:\Users\Administrator\AppData\Local\Temp\mnist.npz already exists
+step: 100, loss: 0.4122764, accuracy: 0.9140625
+step: 200, loss: 0.28498638, accuracy: 0.921875
+step: 300, loss: 0.21436812, accuracy: 0.93359375
+step: 400, loss: 0.23279168, accuracy: 0.91796875
+step: 500, loss: 0.23876348, accuracy: 0.91015625
+step: 600, loss: 0.1752773, accuracy: 0.95703125
+step: 700, loss: 0.14060633, accuracy: 0.97265625
+step: 800, loss: 0.14577743, accuracy: 0.95703125
+step: 900, loss: 0.15461099, accuracy: 0.953125
+Test Accuracy: 0.9522
+```
+
+
+
+我们可以看到，loss 在不断地下降，accuracy 不断提高，最终的测试集的准确率为 0.9522，略低于 训练集上的准确率 0.9531，基本属于一个比较合理的训练结果。
 
 
 
