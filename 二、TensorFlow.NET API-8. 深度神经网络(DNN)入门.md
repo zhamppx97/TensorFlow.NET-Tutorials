@@ -1117,5 +1117,7 @@ https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/PracticeCode/DN
 
 DNN_Keras 代码下载链接地址（或扫描下面的二维码）：
 
+https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/PracticeCode/DNN_Keras/DNN_Keras/Program.cs
 
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.assets/1600048687934.png" alt="1600048687934" style="zoom:80%;" />
 
