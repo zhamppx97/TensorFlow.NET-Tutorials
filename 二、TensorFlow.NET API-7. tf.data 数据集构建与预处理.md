@@ -278,11 +278,120 @@ foreach (var (image, label) in mnist_dataset)
 
 
 
-**//TODO:⑤ Dataset.map()**
+**⑤ Dataset.map()**
 
-//TODO:API添加中
+Dataset.map(f) 对数据集中的每个元素应用函数 f （**自定义函数或者 Lambda 表达式**），得到一个新的数据集。这一功能在数据预处理中修改 dataset 中元素是很实用的，往往结合 tf.io 进行读写和解码文件，或者结合 tf.image 进行图像处理。
 
-对数据集中的每个元素应用函数 f （自定义函数或者 Lambda 表达式），得到一个新的数据集。
+map() 方法的主参数为 回调方法 (map_func)，map_func 的参数和返回值均必须有对应 dataset 中元素类型。
+
+
+
+接下来，我们通过几个示例来进行演示。
+
+
+
+**示例1：传自定义函数的方式，我们使用 map 方法对 dataset 中的数据进行类型转换。**
+
+我们先自定义类型转换的函数，代码如下：
+
+```c#
+static Tensor change_dtype(Tensor t)
+{
+    return tf.cast(t, dtype: TF_DataType.TF_INT32);
+}
+```
+
+然后我们通过 map 方法，对一个 dataset 中的每个数据进行自定义函数 change_dtype 的应用。
+
+```c#
+var dataset = tf.data.Dataset.range(0, 3);
+print("dataset:");
+foreach (var item in dataset)
+{
+    print(item);
+}
+
+var dataset_map = dataset.map(change_dtype);
+print("\r\ndataset_map:");
+foreach (var item in dataset_map)
+{
+    print(item);
+}
+```
+
+运行上述代码，我们可以得到正确的数据类型转换（ int64 → int32 ）的结果：
+
+```
+dataset:
+(tf.Tensor: shape=(), dtype=int64, numpy=0, )
+(tf.Tensor: shape=(), dtype=int64, numpy=1, )
+(tf.Tensor: shape=(), dtype=int64, numpy=2, )
+
+dataset_map:
+(tf.Tensor: shape=(), dtype=int32, numpy=0, )
+(tf.Tensor: shape=(), dtype=int32, numpy=1, )
+(tf.Tensor: shape=(), dtype=int32, numpy=2, )
+```
+
+
+
+**示例2：传 Lambda 的方式，我们使用 map 方法对 dataset 中的数据进行数值运算。**
+
+下述代码通过 map 方法，对一个 dataset 中的每个数据进行 Lambda 表达式（ x = x + 10 ）的操作。
+
+```c#
+var dataset = tf.data.Dataset.range(0, 3);
+print("dataset:");
+foreach (var item in dataset)
+{
+    print(item);
+}
+
+var dataset_map = dataset.map(x => x + 10);
+print("\r\ndataset_map:");
+foreach (var item in dataset_map)
+{
+    print(item);
+}
+```
+
+运行上述代码，我们可以得到正确的数值运算（ x = x + 10 ）的结果：
+
+```
+dataset:
+(tf.Tensor: shape=(), dtype=int64, numpy=0, )
+(tf.Tensor: shape=(), dtype=int64, numpy=1, )
+(tf.Tensor: shape=(), dtype=int64, numpy=2, )
+
+dataset_map:
+(tf.Tensor: shape=(), dtype=int64, numpy=10, )
+(tf.Tensor: shape=(), dtype=int64, numpy=11, )
+(tf.Tensor: shape=(), dtype=int64, numpy=12, )
+```
+
+
+
+**示例3：传自定义函数的方式，我们来尝试处理 tuple 类型的元素。**
+
+对于 tuple 类型的元素处理，我们可以这样定义 map_func：
+
+
+
+
+
+**示例4：使用 map 方法将所有 mnist 图片旋转90度。**
+
+示例代码片段如下：
+
+
+
+
+
+和 prefetch() 方法类似，map() 也可以利用 GPU 的性能并行化地对数据进行处理，提高效率。通过设置 Dataset.map() 的 use_inter_op_parallelism （默认为 true 开启），实现数据处理的并行化，如下图所示。
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-7.%20tf.data%20%E6%95%B0%E6%8D%AE%E9%9B%86%E6%9E%84%E5%BB%BA%E4%B8%8E%E9%A2%84%E5%A4%84%E7%90%86.assets/1601282712428.png" alt="1601282712428" style="zoom:67%;" />
+
+
 
 
 
