@@ -20,7 +20,7 @@
 
 ## [8. 深度神经网络(DNN)入门](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.md>)
 
-## 9. Train相关
+## 9. AutoGraph机制
 
 ## 10. Tensorboard和Summary类
 
