@@ -94,12 +94,13 @@ x:2017,y:17500
 
 
 
-类似地，我们也可以通过这种方式载入 MNIST 数据集，代码如下（我们使用SciSharp的SharpCV进行图像的显示）：
+类似地，我们也可以通过这种方式载入 MNIST 数据集，代码如下（我们使用SciSharp的SharpCV进行图像的显示，MNIST数据集从 http://yann.lecun.com/exdb/mnist/ 自动下载并临时缓存值下述路径 C:\Users\Administrator\AppData\Local\Temp）：
 
 ```c#
 using NumSharp;
 using System;
 using static Tensorflow.Binding;
+using static Tensorflow.KerasApi;
 using static SharpCV.Binding;
 
 namespace TF.NET_Test_Core
@@ -108,7 +109,7 @@ namespace TF.NET_Test_Core
     {
         static void Main(string[] args)
         {
-            var ((x_train, y_train), (_, _)) = tf.keras.datasets.mnist.load_data();
+            var ((x_train, y_train), (_, _)) = keras.datasets.mnist.load_data();
             x_train = np.expand_dims(x_train / 255f, -1);
             var mnist_dataset = tf.data.Dataset.from_tensor_slices(x_train, y_train);
 
@@ -371,17 +372,67 @@ dataset_map:
 
 
 
-**示例3：传自定义函数的方式，我们来尝试处理 tuple 类型的元素。**
+**TODO目前还未支持    示例3：传自定义函数的方式，我们来尝试处理 tuple 类型的元素。**
 
 对于 tuple 类型的元素处理，我们可以这样定义 map_func：
 
+```c#
+static (Tensor, Tensor) change_value((Tensor, Tensor) <t1, t2>)
+{
+    return (t1 / 10, tf.cast(t2, dtype: TF_DataType.TF_INT32) * (-1));
+}
+```
+
+然后我们通过 map 方法，对一个 dataset 中的每个数据进行自定义函数 change_dtype 的应用：
+
+```c#
+//map的元祖的测试，TODO事项
+var X = tf.constant(new[] { 2013, 2014, 2015, 2016, 2017 });
+var Y = tf.constant(new[] { 12000, 14000, 15000, 16500, 17500 });
+var dataset = tf.data.Dataset.from_tensor_slices(X, Y);
+print("dataset:");
+foreach (var item in dataset)
+{
+    print(item);
+}
+
+var dataset_map = dataset.map(change_value);
+print("\r\ndataset_map:");
+foreach (var item in dataset_map)
+{
+    print(item);
+}
+```
+
+运行上述代码，我们可以得到正确的数据运算的结果：
 
 
 
 
-**示例4：使用 map 方法将所有 mnist 图片旋转90度。**
+
+
+
+**TODO目前还未支持     示例4：使用 map 方法将所有 mnist 图片旋转90度。**
 
 示例代码片段如下：
+
+```python
+# 下述为python代码，待转换
+def rot90(image, label):
+    image = tf.image.rot90(image)
+    return image, label
+
+mnist_dataset = mnist_dataset.map(rot90)
+
+for image, label in mnist_dataset:
+    plt.title(label.numpy())
+    plt.imshow(image.numpy()[:, :, 0])
+    plt.show()
+```
+
+
+
+
 
 
 
