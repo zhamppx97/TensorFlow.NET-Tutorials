@@ -110,13 +110,14 @@ namespace TF.NET_Test_Core
         static void Main(string[] args)
         {
             var ((x_train, y_train), (_, _)) = keras.datasets.mnist.load_data();
-            x_train = np.expand_dims(x_train / 255f, -1);
+            x_train = x_train.astype(NPTypeCode.Double);
             var mnist_dataset = tf.data.Dataset.from_tensor_slices(x_train, y_train);
 
             mnist_dataset = mnist_dataset.take(1);
             foreach (var (image, label) in mnist_dataset)
             {
                 cv2.imshow(label.ToString(), image.numpy());
+                cv2.waitKey(0);
             }
             Console.ReadKey();
         }
@@ -377,9 +378,9 @@ dataset_map:
 对于 tuple 类型的元素处理，我们可以这样定义 map_func：
 
 ```c#
-static (Tensor, Tensor) change_value((Tensor, Tensor) <t1, t2>)
+static (Tensor, Tensor) change_value((Tensor t1, Tensor t2) a)
 {
-    return (t1 / 10, tf.cast(t2, dtype: TF_DataType.TF_INT32) * (-1));
+    return (a.t1 / 10, tf.cast(a.t2, dtype: TF_DataType.TF_INT32) * (-1));
 }
 ```
 
@@ -417,7 +418,7 @@ foreach (var item in dataset_map)
 示例代码片段如下：
 
 ```python
-# 下述为python代码，待转换
+# 下述为python代码，待转换为C#
 def rot90(image, label):
     image = tf.image.rot90(image)
     return image, label
