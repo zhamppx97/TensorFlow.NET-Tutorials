@@ -548,7 +548,201 @@ Functional 方式一般的代码流程如下：
 
 
 
-//TODO: TensorFlow.NET的代码示例待完成后添加
+接下来，我们通过代码来逐步实操 Functional 方式 Keras 下的 DNN 。
+
+**① 新建项目，配置环境和引用：**
+
+新建项目。
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.assets/1606286634955.png" alt="1606286634955" style="zoom:80%;" />
+
+ 选择 .NET Core 框架。 
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.assets/1606286716051.png" alt="1606286716051" style="zoom:80%;" />
+
+ 输入项目名，DNN_Keras_Functional。 
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.assets/1606286804311.png" alt="1606286804311" style="zoom:80%;" />
+
+ 确认 .NET Core 版本为 3.0 及以上。 
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.assets/1606286881156.png" alt="1606286881156" style="zoom:80%;" />
+
+ 选择目标平台为 x64 。 
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.assets/1606286942378.png" alt="1606286942378" style="zoom:80%;" />
+
+ 使用 NuGet 安装 TensorFlow.NET 、 SciSharp.TensorFlow.Redist 和 TensorFlow.Keras，如果需要使用 GPU，则安装 SciSharp.TensorFlow.Redist-Windows-GPU。 
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.assets/1606287167040.png" alt="1606287167040" style="zoom:80%;" />
+
+ 添加项目引用。 
+
+```c#
+using NumSharp;
+using System;
+using Tensorflow.Keras.Engine;
+using static Tensorflow.KerasApi;
+using Tensorflow.Keras.Layers;
+```
+
+
+
+ **②  载入MNIST数据，并进行归一化预处理  ：** 
+
+```c#
+(x_train, y_train, x_test, y_test) = keras.datasets.mnist.load_data();
+x_train = x_train.reshape(60000, 784) / 255f;
+x_test = x_test.reshape(10000, 784) / 255f;
+```
+
+
+
+ **③ 搭建和编译 Functional DNN 网络模型，并通过 summary 方法打印模型结构：** 
+
+```c#
+var inputs = keras.Input(shape: 784);// input layer                
+var outputs = layers.Dense(64, activation: keras.activations.Relu).Apply(inputs);//1st dense layer
+outputs = layers.Dense(64, activation: keras.activations.Relu).Apply(outputs);// 2nd dense layer
+outputs = layers.Dense(10).Apply(outputs);// output layer                
+model = keras.Model(inputs, outputs, name: "mnist_model");// build keras model                
+model.summary();// show model summary 
+model.compile(loss: keras.losses.SparseCategoricalCrossentropy(from_logits: true),
+              optimizer: keras.optimizers.RMSprop(),
+              metrics: new[] { "accuracy" });// compile keras model into tensorflow's static graph
+```
+
+
+
+ **④ 训练模型（这里只训练2轮测试）：** 
+
+```c#
+model.fit(x_train, y_train, batch_size: 64, epochs: 2, validation_split: 0.2f);
+```
+
+参数 validation_split 设置为 0.2f，可以在训练过程中将输入的训练集自动分割出 20% 的预测集，实时评估训练过程的损失和精度。
+
+
+
+ **⑤ 测试集评估：** 
+
+```c#
+model.evaluate(x_test, y_test, verbose: 2);
+```
+
+参数 verbose 为训练过程信息打印的详细度。
+
+
+
+**⑥ 模型保存至本地：** 
+
+```c#
+model.save("mnist_model");
+```
+
+
+
+上述就是 Functional 方式 Keras DNN 的流程，我们可以看到这种方式的代码非常地简洁和灵活。如果需要从本地手动载入预训练好的模型，只需要下面一句 load_model 方法即可完成：
+
+```c#
+model = keras.models.load_model("path_to_my_model");
+```
+
+
+
+ **完整的控制台运行代码如下：** 
+
+```c#
+using NumSharp;
+using System;
+using Tensorflow.Keras.Engine;
+using static Tensorflow.KerasApi;
+using Tensorflow.Keras.Layers;
+
+namespace DNN_Keras_Functional
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            DNN_Keras_Functional dnn = new DNN_Keras_Functional();
+            dnn.Main();
+        }
+        class DNN_Keras_Functional
+        {
+            Model model;
+            NDArray x_train, y_train, x_test, y_test;
+            LayersApi layers = new LayersApi();
+            public void Main()
+            {
+                //1. prepare data
+                (x_train, y_train, x_test, y_test) = keras.datasets.mnist.load_data();
+                x_train = x_train.reshape(60000, 784) / 255f;
+                x_test = x_test.reshape(10000, 784) / 255f;
+
+                //2. buid model                
+                var inputs = keras.Input(shape: 784);// input layer 
+                var outputs = layers.Dense(64, activation: keras.activations.Relu).Apply(inputs);// 1st dense layer 
+                outputs = layers.Dense(64, activation: keras.activations.Relu).Apply(outputs);// 2nd dense layer 
+                outputs = layers.Dense(10).Apply(outputs);// output layer
+                model = keras.Model(inputs, outputs, name: "mnist_model");// build keras model   
+                model.summary();// show model summary
+                model.compile(loss: keras.losses.SparseCategoricalCrossentropy(from_logits: true),
+                    optimizer: keras.optimizers.RMSprop(),
+                    metrics: new[] { "accuracy" });// compile keras model into tensorflow's static graph
+
+                //3. train model by feeding data and labels.
+                model.fit(x_train, y_train, batch_size: 64, epochs: 2, validation_split: 0.2f);
+
+                //4. evluate the model
+                model.evaluate(x_test, y_test, verbose: 2);
+
+                //5. save and serialize model
+                model.save("mnist_model");
+
+                // reload the exact same model purely from the file:
+                // model = keras.models.load_model("path_to_my_model");
+
+                Console.ReadKey();
+            }
+        }
+    }
+}
+
+```
+
+
+
+ **运行结果如下：** 
+
+```
+Model: mnist_model
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #
+=================================================================
+input_1 (InputLayer)         (None, 784)               0
+_________________________________________________________________
+dense (Dense)                (None, 64)                50240
+_________________________________________________________________
+dense_1 (Dense)              (None, 64)                4160
+_________________________________________________________________
+dense_2 (Dense)              (None, 10)                650
+=================================================================
+Total params: 55050
+Trainable params: 55050
+Non-trainable params: 0
+_________________________________________________________________
+Training...
+epoch: 0, loss: 2.3052168, accuracy: 0.046875
+epoch: 1, loss: 0.34531808, accuracy: 0.9035208
+epoch: 2, loss: 0.25493768, accuracy: 0.9276875
+Testing...
+iterator: 1, loss: 0.24668744, accuracy: 0.929454
+```
+
+
+
+我们可以看到，终端正确输出了 DNN 模型的结构。同时训练过程中实时地打印出了简洁的训练中间数据，loss 在合理地下降，accuracy 提高，最终的测试集的准确率为 0.9295，略低于 训练集上的准确率 0.9277，基本属于一个比较合理的训练结果。 
 
 
 
@@ -726,7 +920,7 @@ train_data = train_data.repeat()
 
 
 
-**④ 搭建 Keras 网络模型：**
+**④ 搭建 Model Subclassing 方式的 Keras DNN 网络模型：**
 
 Model Subclassing 方式搭建 Keras 的 DNN 网络模型，输入层参数。
 
