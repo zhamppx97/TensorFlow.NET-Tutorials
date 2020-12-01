@@ -44,7 +44,23 @@ tf.Tensor: shape=(), dtype=int32, numpy=6
 
 这个过程是动态计算图方式进行的，即 Eager Mode 下的数值运算。
 
-在 TensorFlow.NET 中我们通过 **tf.autograph.to_graph()** 方法将动态计算图转换为静态计算图，用法很简单，直接增加一句转换代码即可完成，我们来对上述的乘法运算进行 AutoGraph 转换测试下。
+
+
+在 TensorFlow.NET 中我们通过2种方式实现 AutoGraph 机制：
+
+方式① 手动运行 **tf.autograph.to_graph()** 方法将函数转换为静态计算图；
+
+方式② 函数体前加 Attribute 特性标签 **[AutoGraph]** 来修饰函数 实现自动静态图转换。
+
+
+
+我们推荐使用 **方式② [AutoGraph]** 方式，更加灵活便捷，代码可读性更强，下面我们对这2种方式分别举例说明。
+
+
+
+**①  tf.autograph.to_graph() 详细说明**
+
+我们可以通过 **tf.autograph.to_graph()** 方法将动态计算图转换为静态计算图，用法很简单，直接增加一句转换代码即可完成，我们来对上述的乘法运算进行 AutoGraph 转换测试下。
 
 **加入 tf.autograph.to_graph() 进行 AutoGraph 转换：**
 
@@ -230,9 +246,332 @@ tf.Tensor: shape=(), dtype=int32, numpy=6
 
 
 
+**② [AutoGraph] 方式详细说明**
+
+另一种推荐的 AutoGraph转换方式是 在函数体前加 Attribute 特性标签 **[AutoGraph]** ，修饰函数 实现自动静态图转换。这种方式更加便捷，代码变动量更少，程序可修改性和可读性更高。
+
+我们通过几个不同的例子来看一下。
+
+
+
+**示例1#：浮点加法运算**
+
+这次我们做一个浮点型小数的相加运算，代码如下：
+
+```c#
+public void Run()
+{
+    var a = tf.constant(2.0);
+    var b = tf.constant(1.5);
+    var output = Add(a, b);
+    print(output);
+
+    Console.ReadKey();
+}
+Tensor Add(Tensor a, Tensor b)
+{
+    var c = a + b;
+    return c;
+}
+```
+
+运行后，程序输出了相加运算的结果：
+
+```c#
+tf.Tensor: shape=(), dtype=TF_DOUBLE, numpy=3.5
+```
+
+我们在 Add() 方法前面加特性标签 [AutoGraph] 即可实现 AutoGraph转换，代码如下：
+
+```c#
+public void Run()
+{
+    var a = tf.constant(2.0);
+    var b = tf.constant(1.5);
+    var output = Add(a, b);
+    print(output);
+
+    Console.ReadKey();
+}
+[AutoGraph]
+Tensor Add(Tensor a, Tensor b)
+{
+    var c = a + b;
+    return c;
+}
+```
+
+运行后，程序输出了相同的相加运算的结果：
+
+```c#
+tf.Tensor: shape=(), dtype=TF_DOUBLE, numpy=3.5
+```
+
+
+
+**示例2#：MNIST逻辑回归测试**
+
+接下来，我们测试一个略微复杂的案例-MNIST逻辑回归，关于MNIST逻辑回归的具体内容，大家可以参考 "二、TensorFlow.NET API-6. MNIST手写字符分类 Logistic Regression" 这一章，这里不再赘述。
+
+同时，我们加入计时器，来测试 Eager模式 和 AutoGraph模式的时间上是否有差异。
+
+Eager模式 MNIST逻辑回归的完整控制台代码如下：
+
+```c#
+using static Tensorflow.KerasApi;
+using Tensorflow;
+using static Tensorflow.Binding;
+using Tensorflow.Keras.Optimizers;
+using System.Diagnostics;
+
+namespace Test_Core
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Restart();
+
+            TFNET tfnet = new TFNET();
+            tfnet.Run();
+
+            sw.Stop();
+            print("Time Last：" + sw.Elapsed.TotalSeconds.ToString("0.0 s"));
+        }
+    }
+
+    class TFNET
+    {
+        ResourceVariable W = tf.Variable(tf.ones((784, 10)), name: "weight");
+        ResourceVariable b = tf.Variable(tf.zeros(10), name: "bias");
+        SGD optimizer = keras.optimizers.SGD(0.01f);
+        public void Run()
+        {
+            int training_epochs = 20000;
+            int batch_size = 256;
+            int num_features = 784; // 28*28
+            int display_step = 1000;
+            float accuracy = 0f;
+
+            var ((x_train, y_train), (x_test, y_test)) = keras.datasets.mnist.load_data();
+            (x_train, x_test) = (x_train.reshape((-1, num_features)), x_test.reshape((-1, num_features)));
+            (x_train, x_test) = (x_train / 255f, x_test / 255f);
+
+            var train_data = tf.data.Dataset.from_tensor_slices(x_train, y_train);
+            train_data = train_data.repeat().shuffle(5000).batch(batch_size).prefetch(1);
+            train_data = train_data.take(training_epochs);
+
+            foreach (var (step, (batch_x, batch_y)) in enumerate(train_data, 1))
+            {
+                run_optimization(batch_x, batch_y);
+
+                if (step % display_step == 0)
+                {
+                    var pred = logistic_regression(batch_x);
+                    var loss = cross_entropy(pred, batch_y);
+                    var acc = Accuracy(pred, batch_y);
+                    print($"step: {step}, loss: {(float)loss}, accuracy: {(float)acc}");
+                    accuracy = acc.numpy();
+                }
+            }
+
+            {
+                var pred = logistic_regression(x_test);
+                print($"Test Accuracy: {(float)Accuracy(pred, y_test)}");
+            }
+        }
+        Tensor Accuracy(Tensor y_pred, Tensor y_true)
+        {
+            var correct_prediction = tf.equal(tf.argmax(y_pred, 1), tf.cast(y_true, tf.int64));
+            return tf.reduce_mean(tf.cast(correct_prediction, tf.float32));
+        }
+        Tensor cross_entropy(Tensor y_pred, Tensor y_true)
+        {
+            y_true = tf.cast(y_true, TF_DataType.TF_UINT8);
+            y_true = tf.one_hot(y_true, depth: 10);
+            y_pred = tf.clip_by_value(y_pred, 1e-9f, 1.0f);
+            return tf.reduce_mean(-tf.reduce_sum(y_true * tf.math.log(y_pred), 1));
+        }
+        Tensor logistic_regression(Tensor x)
+        {
+            return tf.nn.softmax(tf.matmul(x, W) + b);
+        }
+        private void run_optimization(Tensor x, Tensor y)
+        {
+            using var g = tf.GradientTape();
+            var pred = logistic_regression(x);
+            var loss = cross_entropy(pred, y);
+            var gradients = g.gradient(loss, (W, b));
+            optimizer.apply_gradients(zip(gradients, (W, b)));
+        }
+
+    }
+}
+```
+
+程序执行使用了 47.2 秒，运行结果输出如下（不同PC可能执行时间和运算结果略有不同）：
+
+```c#
+step: 1000, loss: 0.60991216, accuracy: 0.859375
+step: 2000, loss: 0.52773017, accuracy: 0.8515625
+step: 3000, loss: 0.49317402, accuracy: 0.86328125
+step: 4000, loss: 0.3669852, accuracy: 0.8984375
+step: 5000, loss: 0.34490967, accuracy: 0.91015625
+step: 6000, loss: 0.36495364, accuracy: 0.90625
+step: 7000, loss: 0.3448297, accuracy: 0.91796875
+step: 8000, loss: 0.3595497, accuracy: 0.890625
+step: 9000, loss: 0.4222083, accuracy: 0.87109375
+step: 10000, loss: 0.3518588, accuracy: 0.90625
+step: 11000, loss: 0.3254419, accuracy: 0.91015625
+step: 12000, loss: 0.3375517, accuracy: 0.90234375
+step: 13000, loss: 0.47696534, accuracy: 0.875
+step: 14000, loss: 0.38535655, accuracy: 0.890625
+step: 15000, loss: 0.4106849, accuracy: 0.875
+step: 16000, loss: 0.33494166, accuracy: 0.90625
+step: 17000, loss: 0.41341114, accuracy: 0.91796875
+step: 18000, loss: 0.33995813, accuracy: 0.90625
+step: 19000, loss: 0.32934952, accuracy: 0.9140625
+Test Accuracy: 0.9166
+Time Last：47.2 s
+```
+
+我们在执行优化器 run_optimization() 方法前面加特性标签 [AutoGraph] 即可实现 AutoGraph转换，完整的控制台代码如下：
+
+```c#
+using static Tensorflow.KerasApi;
+using Tensorflow;
+using static Tensorflow.Binding;
+using Tensorflow.Keras.Optimizers;
+using System.Diagnostics;
+using Tensorflow.Graphs;
+
+namespace Test_Core
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Restart();
+
+            TFNET tfnet = new TFNET();
+            tfnet.Run();
+
+            sw.Stop();
+            print("Time Last：" + sw.Elapsed.TotalSeconds.ToString("0.0 s"));
+        }
+    }
+
+    class TFNET
+    {
+        ResourceVariable W = tf.Variable(tf.ones((784, 10)), name: "weight");
+        ResourceVariable b = tf.Variable(tf.zeros(10), name: "bias");
+        SGD optimizer = keras.optimizers.SGD(0.01f);
+        public void Run()
+        {
+            int training_epochs = 20000;
+            int batch_size = 256;
+            int num_features = 784; // 28*28
+            int display_step = 1000;
+            float accuracy = 0f;
+
+            var ((x_train, y_train), (x_test, y_test)) = keras.datasets.mnist.load_data();
+            (x_train, x_test) = (x_train.reshape((-1, num_features)), x_test.reshape((-1, num_features)));
+            (x_train, x_test) = (x_train / 255f, x_test / 255f);
+
+            var train_data = tf.data.Dataset.from_tensor_slices(x_train, y_train);
+            train_data = train_data.repeat().shuffle(5000).batch(batch_size).prefetch(1);
+            train_data = train_data.take(training_epochs);
+
+            foreach (var (step, (batch_x, batch_y)) in enumerate(train_data, 1))
+            {
+                run_optimization(batch_x, batch_y);
+
+                if (step % display_step == 0)
+                {
+                    var pred = logistic_regression(batch_x);
+                    var loss = cross_entropy(pred, batch_y);
+                    var acc = Accuracy(pred, batch_y);
+                    print($"step: {step}, loss: {(float)loss}, accuracy: {(float)acc}");
+                    accuracy = acc.numpy();
+                }
+            }
+
+            {
+                var pred = logistic_regression(x_test);
+                print($"Test Accuracy: {(float)Accuracy(pred, y_test)}");
+            }
+        }
+        Tensor Accuracy(Tensor y_pred, Tensor y_true)
+        {
+            var correct_prediction = tf.equal(tf.argmax(y_pred, 1), tf.cast(y_true, tf.int64));
+            return tf.reduce_mean(tf.cast(correct_prediction, tf.float32));
+        }
+        Tensor cross_entropy(Tensor y_pred, Tensor y_true)
+        {
+            y_true = tf.cast(y_true, TF_DataType.TF_UINT8);
+            y_true = tf.one_hot(y_true, depth: 10);
+            y_pred = tf.clip_by_value(y_pred, 1e-9f, 1.0f);
+            return tf.reduce_mean(-tf.reduce_sum(y_true * tf.math.log(y_pred), 1));
+        }
+        Tensor logistic_regression(Tensor x)
+        {
+            return tf.nn.softmax(tf.matmul(x, W) + b);
+        }
+        [AutoGraph]
+        private void run_optimization(Tensor x, Tensor y)
+        {
+            using var g = tf.GradientTape();
+            var pred = logistic_regression(x);
+            var loss = cross_entropy(pred, y);
+            var gradients = g.gradient(loss, (W, b));
+            optimizer.apply_gradients(zip(gradients, (W, b)));
+        }
+
+    }
+}
+```
+
+这次的程序执行使用了 45.3 秒，运行结果输出如下（不同PC可能执行时间和运算结果略有不同）：
+
+```c#
+step: 1000, loss: 0.5845629, accuracy: 0.88671875
+step: 2000, loss: 0.42607152, accuracy: 0.8984375
+step: 3000, loss: 0.5029169, accuracy: 0.85546875
+step: 4000, loss: 0.33637348, accuracy: 0.90625
+step: 5000, loss: 0.4658397, accuracy: 0.875
+step: 6000, loss: 0.3632791, accuracy: 0.89453125
+step: 7000, loss: 0.38538253, accuracy: 0.90234375
+step: 8000, loss: 0.3392726, accuracy: 0.90234375
+step: 9000, loss: 0.30917627, accuracy: 0.90234375
+step: 10000, loss: 0.3470266, accuracy: 0.9140625
+step: 11000, loss: 0.33611432, accuracy: 0.921875
+step: 12000, loss: 0.37535334, accuracy: 0.89453125
+step: 13000, loss: 0.35773978, accuracy: 0.890625
+step: 14000, loss: 0.35660252, accuracy: 0.8984375
+step: 15000, loss: 0.23310906, accuracy: 0.9453125
+step: 16000, loss: 0.3695503, accuracy: 0.88671875
+step: 17000, loss: 0.31830546, accuracy: 0.90625
+step: 18000, loss: 0.2850374, accuracy: 0.91796875
+step: 19000, loss: 0.26065654, accuracy: 0.9375
+Test Accuracy: 0.917
+Time Last：45.3 s
+```
+
+比较2次的结果，加入 AutoGraph机制后，程序运行效率地提升不太明显，执行时间差异不大。
+
+
+
+通过上面的 "MNIST逻辑回归的例子" 和 "一百万次乘法运算" 这2个例子，我们可以看到，针对单一操作均很耗时的情况，AutoGraph机制带来的性能提升不会太大，而针对模型由许多小的操作组成的时候，AutoGraph机制的效率提升较大。大家在实际应用的过程中可以综合考虑具体的应用场景，选择性地应用AutoGraph机制。
+
+
+
+
+
 ### 9.2 AutoGraph机制原理
 
-当我们使用 tf.autograph.to_graph() 方法将一个函数转换为静态计算图的时候，程序内部到底发生了什么呢？
+当我们使用 tf.autograph.to_graph() 或者 [AutoGraph] 方法将一个函数转换为静态计算图的时候，程序内部到底发生了什么呢？
 
 例如，我们测试如下代码：
 

@@ -2,7 +2,7 @@
 
 # 一、机器学习基础
 
-# 二、TensorFlow.NET 入门手册
+# 二、TensorFlow.NET API与入门手册
 
 ## [1. TensorFlow.NET介绍](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/二、TensorFlow.NET API-1. TensorFlow.NET介绍.md>)
 
@@ -22,11 +22,13 @@
 
 ## [9. AutoGraph机制](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/%E4%BA%8C%E3%80%81TensorFlow.NET%20API-9.%20AutoGraph%E6%9C%BA%E5%88%B6.md>)
 
-## 10. Tensorboard和Summary类
+## 10. Keras API
 
-## 11. CheckPoint操作
+## 11. Tensorboard和Summary类
 
-## 12. 神经网络相关
+## 12. CheckPoint操作
+
+## 13. 神经网络相关
 
 # 三、工业应用与案例
 
