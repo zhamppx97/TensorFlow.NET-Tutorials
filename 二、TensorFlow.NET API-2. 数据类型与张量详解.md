@@ -550,7 +550,7 @@ tf.Tensor: shape=(), dtype=int32, numpy=24
 
 
 
-下述为张量的切片功能的演示：
+下述为张量的切片读取功能的演示：
 
 ```c#
 var t = tf.constant(np.array(new[,] {
@@ -588,6 +588,41 @@ tf.Tensor: shape=(5,3), dtype=int32, numpy=[[21, 23, 25],
 [41, 43, 45],
 [51, 53, 55],
 [61, 63, 65]]
+```
+
+
+
+下述为张量的切片赋值功能的演示，通过 assign 方法实现：
+
+```c#
+NDArray nd = new float[,]
+{
+    { 1, 2, 3 },
+    { 4, 5, 6 },
+    { 7, 8, 9 }
+};
+var x = tf.Variable(nd);
+print(x);
+
+// get slice form variable
+var sliced = x[":2", ":2"];
+
+// assign to the sliced tensor
+sliced.assign(22 * tf.ones((2, 2)));
+
+// print assigned value
+print(x);
+```
+
+程序运行后，通过 assign 方法 对 [":2", ":2"] 的张量切片进行赋值，结果如下：
+
+```c#
+tf.Variable: ':0' shape=(3, 3), dtype=float32, numpy=[[1, 2, 3],
+[4, 5, 6],
+[7, 8, 9]]
+tf.Variable: ':0' shape=(3, 3), dtype=float32, numpy=[[22, 22, 3],
+[22, 22, 6],
+[7, 8, 9]]
 ```
 
 
