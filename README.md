@@ -22,7 +22,7 @@
 
 ## [9. AutoGraph机制](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/%E4%BA%8C%E3%80%81TensorFlow.NET%20API-9.%20AutoGraph%E6%9C%BA%E5%88%B6.md>)
 
-## 10. Keras API
+## [10. Keras API](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.md>)
 
 ## 11. Tensorboard和Summary类
 
