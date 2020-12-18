@@ -228,29 +228,146 @@ class LinearModel(tf.keras.Model):
 
 自定义模型需要继承 Tensorflow.Keras.Engine.Model 类，然后在构造函数中初始化所需要的层（可以使用 Keras 的层或者继承 Layer 进行自定义层），并重载 call() 方法进行模型的调用，建立输入和输出之间的函数关系。
 
-我们可以通过自定义模型类的方式编写简单的线性模型 `y_pred = a * X + b`  ，实例代码如下：
+我们可以通过自定义模型类的方式编写简单的线性模型 `y_pred = a * X + b`  ，完整的实例代码如下：
+
+```c#
+using NumSharp;
+using System;
+using System.Linq;
+using Tensorflow;
+using Tensorflow.Keras;
+using Tensorflow.Keras.ArgsDefinition;
+using Tensorflow.Keras.Engine;
+using static Tensorflow.Binding;
+using static Tensorflow.KerasApi;
+
+namespace LinearRegression
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            TFNET tfnet = new TFNET();
+            tfnet.Run();
+        }
+    }
+    public class TFNET
+    {
+        public void Run()
+        {
+            Tensor X = tf.constant(new[,] { { 1.0f, 2.0f, 3.0f }, { 4.0f, 5.0f, 6.0f } });
+            Tensor y = tf.constant(new[,] { { 10.0f }, { 20.0f } });
+
+            var model = new Linear(new ModelArgs());
+            var optimizer = keras.optimizers.SGD(learning_rate: 0.01f);
+            foreach (var step in range(20))//20 iterations for test
+            {
+                using var g = tf.GradientTape();
+                var y_pred = model.Apply(X);//using "y_pred = model.Apply(X)" replace "y_pred = a * X + b"
+                var loss = tf.reduce_mean(tf.square(y_pred - y));
+                var grads = g.gradient(loss, model.trainable_variables);
+                optimizer.apply_gradients(zip(grads, model.trainable_variables.Select(x => x as ResourceVariable)));
+                print($"step: {step},loss: {loss.numpy()}");
+            }
+            print(model.trainable_variables.ToArray());
+            Console.ReadKey();
+        }
+    }
+    public class Linear : Model
+    {
+        Layer dense;
+        public Linear(ModelArgs args) : base(args)
+        {
+            dense = keras.layers.Dense(1, activation: null,
+                kernel_initializer: tf.zeros_initializer, bias_initializer: tf.zeros_initializer);
+            StackLayers(dense);
+        }
+        // Set forward pass
+        protected override Tensors Call(Tensors inputs, Tensor state = null, bool is_training = false)
+        {
+            var outputs = dense.Apply(inputs);
+            return outputs;
+        }
+    }
+}
+```
+
+这里，我们没有显式地声明 `a` 和 `b` 两个变量并写出 `y_pred = a * X + b` 这一线性变换，而是建立了一个继承了 `tf.keras.Model` 的模型类 `Linear` 。这个类在初始化部分实例化了一个 **全连接层** （ `keras.layers.Dense` ），并在 call 方法中对这个层进行调用，实现了线性变换的计算。 
 
 
 
+你可以通过扫二维码 或者 访问代码链接，进行该 “LinearRegression_CustomModel” 完整控制台程序代码的下载。
 
 
 
+代码下载URL：
+
+https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/PracticeCode/2.10%20Keras%20API/LinearRegression_CustomModel/LinearRegression/Program.cs
 
 
 
+二维码链接：
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.assets/1608273760088.png" alt="1608273760088" style="zoom:80%;" />
 
 
 
+通过运行代码，我们可以得到正确的 Loss 下降的过程数据，同时训练完成后，终端打印出了最终 dense 中的 kernel 和 bias 的值，如下所示：
+
+```
+step: 0,loss: 250
+step: 1,loss: 2.4100037
+step: 2,loss: 0.85786396
+step: 3,loss: 0.8334713
+step: 4,loss: 0.8188195
+step: 5,loss: 0.80448306
+step: 6,loss: 0.7903991
+step: 7,loss: 0.7765587
+step: 8,loss: 0.7629635
+step: 9,loss: 0.74960434
+step: 10,loss: 0.73648137
+step: 11,loss: 0.7235875
+step: 12,loss: 0.71091765
+step: 13,loss: 0.69847053
+step: 14,loss: 0.6862406
+step: 15,loss: 0.67422575
+step: 16,loss: 0.66242313
+step: 17,loss: 0.65082455
+step: 18,loss: 0.6394285
+step: 19,loss: 0.62823385
+[tf.Variable: 'kernel:0' shape=(3, 1), dtype=float32, numpy=[[0.8266835],
+[1.2731746],
+[1.7196654]], tf.Variable: 'bias:0' shape=(1), dtype=float32, numpy=[0.44649106]]
+```
 
 
 
+**模型（Model） 常用 API 概述**
+
+**① 模型类**
+
+Tensorflow.Keras.Engine.Model() 为模型类，通过将网络层组合成为一个对象，实现训练和推理功能。模型类的参数为 ModelArgs 参数列表类，包含 Inputs (模型的输入)  和 Outputs (模型的输出) 。
 
 
 
+**② 模型类的 summary 方法**
+
+打印网络模型的内容摘要，包含网络层结构和参数描述等。
+
+**参数**
+
+- **line_length**：int 类型，打印的总行数，默认值 -1 代表打印所有内容；
+- **positions**： float[] 类型，指定每一行中日志元素的相对或绝对位置 ，默认值 null ；
 
 
 
+**③ Sequential 类**
 
+Sequential 类继承 Model 类，将线性的网络层堆叠到一个模型中，并提供训练和推理的方法。
+
+
+
+**④ Sequential 类的 add 方法**
 
 
 
@@ -282,6 +399,12 @@ class LinearModel(tf.keras.Model):
 
 
 
+
+
+
+
+
+
 ### 10.4 Keras 建立模型的3种方式
 
 //keras建模的一般步骤 先画示意图
@@ -292,7 +415,11 @@ class LinearModel(tf.keras.Model):
 
 
 
+有三种创建Keras模型的方法：
 
+- 的[顺序模型](https://keras.io/guides/sequential_model)，这是非常简单的（层的简单列表），但仅限于单输入，单输出层的堆叠（作为名字赠送）。
+- 该[功能的API](https://keras.io/guides/functional_api)，这是一个易于使用的，全功能的API，支持任意机型的架构。对于大多数人和大多数用例，这就是您应该使用的。这就是Keras的“产业实力”模型。
+- [模型子类化](https://keras.io/guides/model_subclassing)，您可以从头开始实施所有操作。如果您有复杂的现成的研究用例，请使用此选项。
 
 
 
