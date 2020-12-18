@@ -142,6 +142,116 @@ Layers.InputLayer
 
 **自定义的网络层（Layer）** 
 
+如果现有的这些层无法满足你的要求，我们可以通过继承 `Tensorflow.Keras.Engine.Layer` 来编写自己的自定义层。
+
+自定义层需要继承 `Tensorflow.Keras.Engine.Layer` 类，重新实现 `Layer构造函数` ，并重写 `build` 和 `call` 这2个方法（build方法一般定义Layer需要被训练的参数，call方法一般定义正向传播运算逻辑），你也可以添加自定义的方法。如果要让自定义的 Layer 通过 Functional API 组合成模型时可以被保存成 h5 模型，需要自定义get_config方法。
+
+自定义层的模板如下：
+
+//TODO：下述代码需要转换为C#方式---------------------------------------------------------------------------
+
+```python
+class MyLayer(tf.keras.layers.Layer):
+    def __init__(self):
+        super().__init__()
+        # 初始化代码
+
+    def build(self, input_shape):     # input_shape 是一个 TensorShape 类型对象，提供输入的形状
+        # 在第一次使用该层的时候调用该部分代码，在这里创建变量可以使得变量的形状自适应输入的形状
+        # 而不需要使用者额外指定变量形状。
+        # 如果已经可以完全确定变量的形状，也可以在__init__部分创建变量
+        self.variable_0 = self.add_weight(...)
+        self.variable_1 = self.add_weight(...)
+
+    def call(self, inputs):
+        # 模型调用的代码（处理输入并返回输出）
+        return output
+```
+
+//TODO：-------------------------------------------------------------------------------------------------------------------
+
+
+
+下面是一个简化的全连接层的范例，类似 Dense，此代码在 `build` 方法中创建两个变量，并在 `call` 方法中使用创建的变量进行运算： 
+
+//TODO：下述代码需要转换为C#方式---------------------------------------------------------------------------
+
+```python
+class LinearLayer(tf.keras.layers.Layer):
+    def __init__(self, units):
+        super().__init__()
+        self.units = units
+
+    def build(self, input_shape):     # 这里 input_shape 是第一次运行call()时参数inputs的形状
+        self.w = self.add_variable(name='w',
+            shape=[input_shape[-1], self.units], initializer=tf.zeros_initializer())
+        self.b = self.add_variable(name='b',
+            shape=[self.units], initializer=tf.zeros_initializer())
+
+    def call(self, inputs):
+        y_pred = tf.matmul(inputs, self.w) + self.b
+        return y_pred
+```
+
+//TODO：-------------------------------------------------------------------------------------------------------------------
+
+
+
+在定义模型的时候，我们便可以如同 Keras 中的其他层一样，调用我们自定义的层 `LinearLayer`： 
+
+//TODO：下述代码需要转换为C#方式---------------------------------------------------------------------------
+
+```python
+class LinearModel(tf.keras.Model):
+    def __init__(self):
+        super().__init__()
+        self.layer = LinearLayer(units=1)
+
+    def call(self, inputs):
+        output = self.layer(inputs)
+        return output
+```
+
+//TODO：-------------------------------------------------------------------------------------------------------------------
+
+
+
+介绍完 Keras 中的层，我们来看下 Keras 中模型的结构，以及如何自定义模型。
+
+
+
+**自定义的模型（Model）**
+
+我们先来了解下 Keras 模型类的示意图：
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.assets/1608257005411.png" alt="1608257005411" style="zoom:80%;" />
+
+自定义模型需要继承 Tensorflow.Keras.Engine.Model 类，然后在构造函数中初始化所需要的层（可以使用 Keras 的层或者继承 Layer 进行自定义层），并重载 call() 方法进行模型的调用，建立输入和输出之间的函数关系。
+
+我们可以通过自定义模型类的方式编写简单的线性模型 `y_pred = a * X + b`  ，实例代码如下：
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -174,11 +284,17 @@ Layers.InputLayer
 
 ### 10.4 Keras 建立模型的3种方式
 
+//keras建模的一般步骤 先画示意图
 
 
 
 
-### 10.5 Keras完整示例
+
+
+
+
+
+
 
 
 
