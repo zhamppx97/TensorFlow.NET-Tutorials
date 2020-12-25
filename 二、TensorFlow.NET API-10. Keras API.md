@@ -346,11 +346,19 @@ step: 19,loss: 0.62823385
 
 **① 模型类**
 
+```c#
+Tensorflow.Keras.Engine.Model(ModelArgs args)
+```
+
 Tensorflow.Keras.Engine.Model() 为模型类，通过将网络层组合成为一个对象，实现训练和推理功能。模型类的参数为 ModelArgs 参数列表类，包含 Inputs (模型的输入)  和 Outputs (模型的输出) 。
 
 
 
 **② 模型类的 summary 方法**
+
+```c#
+Model.summary(int line_length = -1, float[] positions = null)
+```
 
 打印网络模型的内容摘要，包含网络层结构和参数描述等。
 
@@ -363,12 +371,274 @@ Tensorflow.Keras.Engine.Model() 为模型类，通过将网络层组合成为一
 
 **③ Sequential 类**
 
-Sequential 类继承 Model 类，将线性的网络层堆叠到一个模型中，并提供训练和推理的方法。
+```c#
+Tensorflow.Keras.Engine.Sequential(SequentialArgs args)
+```
+
+Sequential 类继承 Model 类，将线性的网络层堆叠到一个模型中，并提供训练和推理的方法；
 
 
 
 **④ Sequential 类的 add 方法**
 
+```c#
+Sequential.add(Layer layer)
+```
+
+在网络模型的顶部插入一个网络层；
+
+
+
+**④ Sequential 类的 pop 方法**
+
+```c#
+Sequential.pop()
+```
+
+删除网络模型的最后一个网络层；
+
+
+
+**接下来是模型(Model)训练相关的API：**
+
+
+
+**⑥ compile 编译方法 **
+
+```c#
+Model.compile(ILossFunc loss, OptimizerV2 optimizer, string[] metrics)
+```
+
+配置模型的训练参数。
+
+**参数**
+
+- **optimizer**：优化器，参数类型为 优化器名称的字符串 或 优化器实例；
+- **loss**：损失函数，参数类型为 损失函数体 或 `Tensorflow.Keras.Losses.Loss` 实例 ；
+- **metrics**：模型训练和测试过程中，采用的评估指标列表，列表元素类型为 评估函数名称的字符串、评估函数体 或 `Tensorflow.Keras.Metrics.Metric` 实例；
+- **loss_weights** ：可选参数，类型为 列表 或 字典，指定权重系数以加权模型的不同输出中的 Loss 贡献度；
+- **weighted_metric**：可选参数，类型为 列表，在训练和测试期间要通过sample_weight或class_weight评估和加权的指标列表；
+- **run_eagerly**：可选参数，类型为 bool布尔类型，默认为 False ，如果设置为 True ，则模型结构将不会被`tf.function` 修饰和调用；
+-  **steps_per_execution**：可选参数，类型为 整数Int，默认值为 1，表示每个 `tf.function` 调用中要运行的批处理数。 
+
+
+
+**⑦ fit 训练方法**
+
+```c#
+Model.fit(NDArray x, NDArray y,
+            int batch_size = -1,
+            int epochs = 1,
+            int verbose = 1,
+            float validation_split = 0f,
+            bool shuffle = true,
+            int initial_epoch = 0,
+            int max_queue_size = 10,
+            int workers = 1,
+            bool use_multiprocessing = false)
+```
+
+以固定的轮数或迭代方式 训练模型。
+
+**参数**
+
+- **x**：输入数据，类型为 Numpy数组 或 Tensor；
+- **y**：标签数据，类型和 x 保持一致；
+- **batch_size**：批次大小，类型为 整数int，指定每次梯度更新时每个样本批次的数量；
+- **epochs**：训练轮数，类型为 整数int，表示模型训练的迭代轮数；
+- **verbose**：详细度，类型为 整数 0 ，1 或 2 ，设置终端输出信息的详细程度。0 为最简模式，1 为进度信息简单显示，2 为每个训练周期的数据详细显示；
+- **validation_split**：验证集划分比，类型为 0~1之间的浮点型float，自动从训练数据集中划分出该比例的数据作为验证集。模型将剥离开训练数据的这一部分，不对其进行训练，并且将在每个轮次结束时评估此验证集数据的损失和其它模型评估函数；
+- **shuffle**：数据集乱序，类型为 布尔bool类型，默认值为true，表示每次训练前都将该批次中的数据随机打乱；
+- **initial_epoch**：周期起点，类型为 整数int，默认值为 0，表示训练开始的轮次起点（常用于重启恢复之前训练中的模型）；
+- **max_queue_size**：队列最大容量，类型为整数int，默认值为 10，设置数据生成器队列的最大容量；
+- **workers**：进程数，类型为整数int，默认值为 1。设置使用基于进程的线程时，要启动的最大进程数。如果未指定，`workers` 则默认为1。如果为0，将在主线程上执行数据生成器；
+- **use_multiprocessing**：是否使用异步线程，类型为 布尔bool类型，默认为 false。如果为`True`，需要使用基于进程的线程；
+
+
+
+**⑧ evaluate 评价方法**
+
+```c#
+Model.evaluate(NDArray x, NDArray y,
+            int batch_size = -1,
+            int verbose = 1,
+            int steps = -1,
+            int max_queue_size = 10,
+            int workers = 1,
+            bool use_multiprocessing = false,
+            bool return_dict = false)
+```
+
+返回测试集上评估的模型损失和精度值。
+
+**参数**
+
+- **x**：输入的测试数据，类型为 Numpy数组 或 Tensor；
+- **y**：测试的标签数据，类型和 x 保持一致；
+- **batch_size**：批次大小，类型为 整数int，指定每次计算时每个样本批次的数量；
+- **verbose**：详细度，类型为 整数 0 或 1  ，设置终端输出信息的详细程度。0 为最简模式，1 为进度信息简单显示；
+- **steps**：迭代步数，类型为 整数，默认值为 -1。设置评估周期内的迭代次数（样本批次数量）；
+- **max_queue_size**：队列最大容量，类型为整数int，默认值为 10，设置数据生成器队列的最大容量；
+- **workers**：进程数，类型为整数int，默认值为 1。设置使用基于进程的线程时，要启动的最大进程数。如果未指定，`workers` 则默认为1。如果为0，将在主线程上执行数据生成器；
+- **use_multiprocessing**：是否使用异步线程，类型为 布尔bool类型，默认为 false。如果为`True`，需要使用基于进程的线程；
+- **return_dict**：返回字典，类型为 布尔bool类型，默认为 false。如果为`True`，返回字典类型的 loss 和 metric 结果，字典的 key 为数据的名称；如果为`False`，则正常返回列表类型的结果；
+
+
+
+**⑨ predict 预测方法**
+
+```c#
+Model.predict(Tensor x,
+            int batch_size = 32,
+            int verbose = 0,
+            int steps = -1,
+            int max_queue_size = 10,
+            int workers = 1,
+            bool use_multiprocessing = false)
+```
+
+生成输入样本的预测输出的结果。
+
+**参数**
+
+- **x**：输入的测试数据，类型为 Tensor；
+- **batch_size**：每批样品数，类型为整数int，如果未指定，`batch_size`则默认为32，该参数指定了每次计算时每个样本批次的数量；
+- **verbose**：详细度，类型为 整数 0 或 1  ，默认值为 0，该参数设置终端输出信息的详细程度。0 为最简模式，1 为进度信息简单显示；
+- **steps**：迭代步数，类型为 整数，默认值为 -1。设置预测周期完成内的迭代次数（样本批次数量）；
+- **max_queue_size**：队列最大容量，类型为整数int，默认值为 10，设置数据生成器队列的最大容量；
+- **workers**：进程数，类型为整数int，默认值为 1。设置使用基于进程的线程时，要启动的最大进程数。如果未指定，`workers` 则默认为1。如果为0，将在主线程上执行数据生成器；
+- **use_multiprocessing**：是否使用异步线程，类型为 布尔 bool 类型，默认为 false。如果为`True`，需要使用基于进程的线程；
+
+**返回值**
+
+返回 Tensor 类型的预测数组。
+
+
+
+**最后一块是模型(Model)保存和载入相关的API：**
+
+
+
+**⑩ save 模型保存方法**
+
+```c#
+Model.save(string filepath,
+            bool overwrite = true,
+            bool include_optimizer = true,
+            string save_format = "tf",
+            SaveOptions options = null)
+```
+
+ 将模型保存到 Tensorflow 的 SavedModel 或单个 HDF5 文件。 
+
+**参数**
+
+- **filepath**：模型文件路径，类型为字符串，模型保存的 SavedModel 或 H5 文件的路径；
+- **overwrite**：是否覆盖，类型为 布尔 bool，设置为 true 以默认方式覆盖目标位置上的任何现有文件，设置为 false 则向用户提供手动提示；
+- **include_optimizer**：是否包含优化器信息，类型为 布尔 bool，如果为 True，则将 optimizer 优化器的状态保存在一起；
+- **save_format**：保存格式，类型为字符串string，可选择 `"tf"` 或 `"h5"` ，指示是否将模型保存到 Tensorflow SavedModel 或 HDF5，在 TF 2.X 中默认为 “tf”；
+- **SaveOptions**：保存到 SaveModel 的选项，类型为 `Tensorflow.ModelSaving.SaveOptions` 对象，用于指定保存到 SavedModel 的选项；
+
+
+
+**⑪ load_model 载入模型功能**
+
+//TODO
+
+加载通过 `model.save()` 方法保存的模型。
+
+https://keras.io/api/models/model_saving_apis/
+
+//TODO
+
+Tensorflow.keras.models.save_model 方法
+
+[`get_weights` 方法](https://keras.io/api/models/model_saving_apis/#getweights-method)
+
+[`set_weights` 方法](https://keras.io/api/models/model_saving_apis/#setweights-method)
+
+[`save_weights` 方法](https://keras.io/api/models/model_saving_apis/#saveweights-method)
+
+[`load_weights` 方法](https://keras.io/api/models/model_saving_apis/#loadweights-method)
+
+[`get_config` 方法](https://keras.io/api/models/model_saving_apis/#getconfig-method)
+
+[`from_config` 方法](https://keras.io/api/models/model_saving_apis/#fromconfig-method)
+
+[`model_from_config` 功能](https://keras.io/api/models/model_saving_apis/#modelfromconfig-function)
+
+[`to_json` 方法](https://keras.io/api/models/model_saving_apis/#tojson-method)
+
+[`model_from_json` 功能](https://keras.io/api/models/model_saving_apis/#modelfromjson-function)
+
+[`clone_model` 功能](https://keras.io/api/models/model_saving_apis/#clonemodel-function)
+
+
+
+
+
+### 10.3 Keras 常用 API 说明
+
+#### 10.3.1 回调函数 Callbacks API
+
+keras 的回调函数是一个类，用在 Model.fit() 中作为参数，可以在训练的各个阶段（例如，在训练的开始或结束时，在单个 epoch 处理之前或之后等）执行一定的操作。
+
+您可以使用回调来处理这些操作：
+
+- 每个批次（batch）训练后写入 TensorBoard 日志以监控指标
+- 定期将模型保存到本地文件
+- 提前结束训练
+- 训练期间查看模型的内部状态和统计信息
+- ...（更多其它的功能）
+
+大部分时候，keras.callbacks 子模块中定义的回调函数类已经足够使用了，如果有特殊的需要，我们也可以通过对 keras.callbacks.Callbacks 执行子类化构造自定义的回调函数。 
+
+
+
+**基础用法**
+
+你可以将回调列表作为 callbacks 参数传递给模型的 Model.fit() 方法，这样就可以在训练的每个阶段自动调用回调列表定义的相关方法，代码如下：
+
+//TODO 下述代码为 Python，需要转换为 C#
+
+```py
+my_callbacks = [
+    tf.keras.callbacks.EarlyStopping(patience=2),
+    tf.keras.callbacks.ModelCheckpoint(filepath='model.{epoch:02d}-{val_loss:.2f}.h5'),
+    tf.keras.callbacks.TensorBoard(log_dir='./logs'),
+]
+model.fit(dataset, epochs=10, callbacks=my_callbacks)
+```
+
+
+
+**已定义的回调类**
+
+我们来简单看下 callbacks 子模块中已定义好的回调函数类，主要有下述几种类型：
+
+- Base Callback class
+
+  keras.callbacks.Callback() 是用于建立新回调的抽象基类，所有回调函数都继承于 keras.callbacks.Callbacks基类，拥有params和model这两个属性。其中 params 是一个dict，记录了训练相关参数 (例如 verbosity, batch size, number of epochs 等等)，model 即当前关联模型的引用；
+
+- ModelCheckpoint
+
+- TensorBoard
+
+- EarlyStopping
+
+- LearningRateScheduler
+
+- ReduceLROnPlateau
+
+- RemoteMonitor
+
+- LambdaCallback
+
+- TerminateOnNaN
+
+- CSVLogger
+
+- ProgbarLogger
 
 
 
@@ -393,7 +663,8 @@ Sequential 类继承 Model 类，将线性的网络层堆叠到一个模型中�
 
 
 
-### 10.3 Keras 常用训练和参数类 API
+
+
 
 
 
