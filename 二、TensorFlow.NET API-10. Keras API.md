@@ -622,23 +622,193 @@ model.fit(dataset, epochs=10, callbacks=my_callbacks)
 
 - ModelCheckpoint
 
+  该回调以特定频率保存 Keras 模型或者模型权重。 `ModelCheckpoint` 回调与 `model.fit()` 训练结合使用，用于以一定间隔（达到最佳性能或每个epoch结束时）保存模型或权重（在 checkpoint 文件中），这样就可以在后续加载模型或权重，以从保存的状态中恢复继续训练。
+
 - TensorBoard
+
+  TensorBoard 是 TensorFlow 自带的可视化工具，该回调可以为 Tensorboard 可视化保存日志信息。包括 Metrics 指标 summary 图、训练图的可视化、激活直方图、采样分析和模型参数可视化等；
 
 - EarlyStopping
 
+  当被监控指标在设定的若干个epoch后没有提升，则提前终止训练。例如，假设训练的目的是使损失（loss）最小化。这样，要监视的指标设置为 `'loss'`，模式设置为 `'min'`。每个 `model.fit()` 训练循环都会检查每个epoch结束时的损失是否不再递减，同时考虑到 `min_delta` 和 `patience`（如果适用的话），一旦发现它不再减少， `model.stop_training `则标记为“真”，训练提前终止；
+
 - LearningRateScheduler
+
+  学习率控制器。给定学习率 lr 和 epoch 的函数关系 schedule ，该回调会根据该函数关系在每个 epoch 前更新学习率， 并将更新后的学习率应用于优化器；
 
 - ReduceLROnPlateau
 
+  当设置的指标停止改善时，自动降低学习率。在常见的深度学习场景中，一旦发现学习停滞不再优化，通常可以将学习率降低2-10倍，以使模型继续优化训练。此回调自动进行这个过程，它监视训练的过程，如果没有发现持续 “ patience ” 轮数（ patience 为可设置的参数）的改善，则学习率会自动按照设定的因子降低；
+
 - RemoteMonitor
+
+  该回调用于将事件流传输到服务器端进行显示；
 
 - LambdaCallback
 
+  使用 callbacks.LambdaCallback 编写较为简单的自定义回调函数，该回调是使用匿名函数构造的；
+
 - TerminateOnNaN
+
+  该回调用于训练过程中遇到 loss 为 NaN 时自动终止训练；
 
 - CSVLogger
 
+  该回调将每次 epoch 后的 logs 结果以 streams 流格式记录到本地 CSV 文件； 
+
 - ProgbarLogger
+
+  将每个 epoch 结束后的 logs 结果打印到标准输出流中。
+
+
+
+#### 10.3.2 数据集预处理 Dataset preprocessing
+
+Keras 中的数据集预处理组件，位于 Tensorflow.Keras.Preprocessing 类中。主要作用是帮助你载入本地磁盘中的数据，转换成 `tf.data.Dataset` 的对象，以供模型训练使用。
+
+常用的数据集预处理功能分为：图像数据预处理、时间数据预处理和文本数据预处理，我们来逐个看下各数据集种类的预处理的函数。
+
+
+
+**图像数据集预处理**
+
+常用函数为 image_dataset_from_directory ，实现从本地磁盘载入图像文件并生成一个 `tf.data.Dataset` 对象的功能。
+
+```c#
+IDatasetV2 image_dataset_from_directory(string directory,
+            string labels = "inferred",
+            string label_mode = "int",
+            string[] class_names = null,
+            string color_mode = "rgb",
+            int batch_size = 32,
+            TensorShape image_size = null,
+            bool shuffle = true,
+            int? seed = null,
+            float validation_split = 0.2f,
+            string subset = null,
+            string interpolation = "bilinear",
+            bool follow_links = false)
+```
+
+例如，假如你有2个文件夹，代表 class_a 和 class_b 这2种类别的图像，每个文件夹包含10,000个来自不同类别的图像文件，并且你想训练一个图像分类的模型，你的训练数据文件夹结构如下：
+
+```c#
+training_data/
+...class_a/
+......a_image_1.jpg
+......a_image_2.jpg
+    ......
+......a_image_N.jpg
+...class_b/
+......b_image_1.jpg
+......b_image_2.jpg
+    ......
+......b_image_N.jpg
+```
+
+你可以直接调用函数 image_dataset_from_directory ，传入参数  `文件夹路径 directory` 和 `labels='inferred' ` ，该函数运行后返回 `tf.data.Dataset` 对象，实现从子目录`class_a`和`class_b`生成批次图像的功能，同时生成标签0和1（0对应于`class_a`和1对应于`class_b`）。 
+
+
+
+参数说明：
+
+- **directory**：数据所在的**目录**。如果 `labels` 被设置为 “inferred” ，则它应包含子目录，每个子目录都包含一个类的图像。否则，目录结构将被忽略。
+- **labels**：  “inferred” ，图像关联的类别标签（标签是从目录结构生成的），或者是整数标签的列表/元组，其大小与目录中找到的图像文件数量相同。标签的编号是根据图像文件路径中的字母和数字的顺序进行排序。
+- **label_mode**：“int”  表示标签被编码为整数（例如，用于`sparse_categorical_crossentropy` 类型的Loss）。“categorical” 是指标签被编码为分类矢量（例如，用于`categorical_crossentropy` 类型的 Loss）。“binary” 表示将标签（只能有2个）编码为 `float32` 标量，其值为0或1（例如表示`binary_crossentropy` 类型的 Loss）。“None”（无标签）。
+- **class_names**：仅在 `labels` 被设置为 “inferred” 时有效。这是类别标签名称的明确列表（必须与子目录的名称匹配）。用于自定义控制类的顺序（否则使用字母数字顺序）。
+- **color_mode**：“grayscale”，“ rgb”，“ rgba” 之一。默认值：“ rgb”。图像将被转换为具有1、3或4个通道。
+- **batch_size**：数据批处理的大小。默认值：32
+- **image_size**：从磁盘读取图像后将图像调整的大小。默认为`(256, 256)`。由于数据管道方式处理的批次图像必须全部具有相同大小，因此必须设置该图像的尺寸。
+- **shuffle**：是否随机打乱数据。默认值：True。如果设置为False，则按字母数字顺序对数据进行排序。
+- **seed**：用于随机排列和转换的随机种子。
+- **validation_split**：设置介于0和1之间的浮点数，用于分割出一部分数据供验证集使用。
+- **subset**：“ training ”或“ validation ”之一。仅在 `validation_split` 设置时使用。
+- **interpolation**：字符串，调整图像大小时使用的图像插值算法。默认为 `bilinear`。支持 `bilinear`，`nearest`，`bicubic`， `area`，`lanczos3`，`lanczos5`，`gaussian`，`mitchellcubic` 。
+- **follow_links**：是否访问符号链接指向的子目录。默认为False。
+
+
+
+**时间数据集预处理**
+
+//TODO `timeseries_dataset_from_array` 功能
+
+https://keras.io/api/preprocessing/timeseries/#timeseries_dataset_from_array-function
+
+
+
+**文本数据集预处理**
+
+常用函数为 text_dataset_from_directory，实现从本地磁盘载入 txt 文本文件并生成一个 `tf.data.Dataset` 对象的功能。
+
+```c#
+IDatasetV2 text_dataset_from_directory(string directory,
+            string labels = "inferred",
+            string label_mode = "int",
+            string[] class_names = null,
+            int batch_size = 32,
+            bool shuffle = true,
+            int? seed = null,
+            float validation_split = 0.2f,
+            string subset = null)
+```
+
+例如，假如你有2个文件夹，代表 class_a 和 class_b 这2种类别的文本数据，每个文件夹包含10,000个来自不同类别的文本文件，并且你想训练一个文本分类的模型，你的训练数据文件夹结构如下：
+
+```c#
+training_data/
+...class_a/
+......a_text_1.txt
+......a_text_2.txt
+    ......
+......a_text_N.txt
+...class_b/
+......b_text_1.txt
+......b_text_2.txt
+    ......
+......b_text_N.txt
+```
+
+你可以直接调用函数 text_dataset_from_directory ，传入参数  `文件夹路径 directory` 和 `labels='inferred' ` ，该函数运行后返回 `tf.data.Dataset` 对象，实现从子目录`class_a`和`class_b`生成批次文本的功能，同时生成标签0和1（0对应于`class_a`和1对应于`class_b`）。 
+
+
+
+参数说明：
+
+- **directory**：数据所在的**目录**。如果 `labels` 被设置为 “inferred” ，则它应包含子目录，每个子目录都包含一个类的文本文件。否则，目录结构将被忽略。
+- **labels**：  “inferred” ，文本文件关联的类别标签（标签是从目录结构生成的），或者是整数标签的列表/元组，其大小与目录中找到的文本文件数量相同。标签的编号是根据文本文件路径中的字母和数字的顺序进行排序。
+- **label_mode**：“int”  表示标签被编码为整数（例如，用于 `sparse_categorical_crossentropy` 类型的Loss）。“categorical” 是指标签被编码为分类矢量（例如，用于 `categorical_crossentropy` 类型的 Loss）。“binary” 表示将标签（只能有2个）编码为 `float32` 标量，其值为0或1（例如表示 `binary_crossentropy` 类型的 Loss）。“None”（无标签）。
+- **class_names**：仅在 `labels` 被设置为 “inferred” 时有效。这是类别标签名称的明确列表（必须与子目录的名称匹配）。用于自定义控制类的顺序（否则使用字母数字顺序）。
+- **batch_size**：数据批处理的大小。默认值：32
+- **shuffle**：是否随机打乱数据。默认值：True。如果设置为False，则按字母数字顺序对数据进行排序。
+- **seed**：用于随机排列和转换的随机种子。
+- **validation_split**：设置介于0和1之间的浮点数，用于分割出一部分数据供验证集使用。
+- **subset**：“ training ”或“ validation ”之一。仅在 `validation_split` 设置时使用。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
