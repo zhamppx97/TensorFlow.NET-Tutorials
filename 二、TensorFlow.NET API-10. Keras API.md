@@ -779,6 +779,7 @@ training_data/
 - **label_mode**：“int”  表示标签被编码为整数（例如，用于 `sparse_categorical_crossentropy` 类型的Loss）。“categorical” 是指标签被编码为分类矢量（例如，用于 `categorical_crossentropy` 类型的 Loss）。“binary” 表示将标签（只能有2个）编码为 `float32` 标量，其值为0或1（例如表示 `binary_crossentropy` 类型的 Loss）。“None”（无标签）。
 - **class_names**：仅在 `labels` 被设置为 “inferred” 时有效。这是类别标签名称的明确列表（必须与子目录的名称匹配）。用于自定义控制类的顺序（否则使用字母数字顺序）。
 - **batch_size**：数据批处理的大小。默认值：32
+- **//TODO max_length**：文本字符串的最大大小。超过此长度的文本将被截断为 `max_length`。
 - **shuffle**：是否随机打乱数据。默认值：True。如果设置为False，则按字母数字顺序对数据进行排序。
 - **seed**：用于随机排列和转换的随机种子。
 - **validation_split**：设置介于0和1之间的浮点数，用于分割出一部分数据供验证集使用。
@@ -788,19 +789,176 @@ training_data/
 
 
 
+#### 10.3.3 优化器 Optimizers
+
+在机器学习中，模型的优化算法可能会直接影响最终生成模型的性能。有时候效果不好，未必是特征数据的问题或者模型结构设计的问题，很可能就是优化算法的问题。
+
+深度学习优化算法大概经历了 SGD -> SGDM -> NAG ->Adagrad -> Adadelta(RMSprop) -> Adam -> Nadam 这样的发展历程。其中，SGD 是最基础的入门级算法，也一直被学术界所推崇，而 Adam 和 Nadam 是目前最主流、最易使用的优化算法，收敛速度和效果也都不错，非常适合新手直接上手使用。
+
+在 Keras 中的优化器 Optimizers 是搭配 compile() 和 fit() 这2个方法使用的，是模型训练必须要设置的两个参数之一（另外一个是 Losses）。
+
+
+
+你可以先实例化 Optimizers 作为参数传给 model.compile() ，或者直接通过字符串标识符传递给 optimizer 参数，后一种方式将直接使用优化器的默认参数。示例如下：
+
+```c#
+// method 1# : compile(ILossFunc loss, OptimizerV2 optimizer, string[] metrics)
+            var layers = keras.layers;
+            model = keras.Sequential(new List<ILayer>
+            {
+                layers.Rescaling(1.0f / 255, input_shape: (img_dim.dims[0], img_dim.dims[1], 3)),
+                layers.Conv2D(16, 3, padding: "same", activation: keras.activations.Relu),
+                layers.MaxPooling2D(),
+                layers.Flatten(),
+                layers.Dense(128, activation: keras.activations.Relu),
+                layers.Dense(num_classes)
+            });
+            var optimizer = keras.optimizers.Adam(learning_rate : 0.01f);
+            model.compile(optimizer: optimizer,
+                loss: keras.losses.SparseCategoricalCrossentropy(from_logits: true),
+                metrics: new[] { "accuracy" });
+
+
+// method 2# : compile(string optimizer, string loss, string[] metrics)
+            var layers = keras.layers;
+            model = keras.Sequential(new List<ILayer>
+            {
+                layers.Rescaling(1.0f / 255, input_shape: (img_dim.dims[0], img_dim.dims[1], 3)),
+                layers.Conv2D(16, 3, padding: "same", activation: keras.activations.Relu),
+                layers.MaxPooling2D(),
+                layers.Flatten(),
+                layers.Dense(128, activation: keras.activations.Relu),
+                layers.Dense(num_classes)
+            });
+            model.compile("adam", "sparse_categorical_crossentropy", metrics: new[] { "accuracy" });
+```
+
+
+
+如果你不使用 compile() 方法，而是通过自定义方式编写训练循环，你也可以通过 tf.GradientTape() 来检索梯度，并调用 optimizer.apply_gradients() 方法实现权重的更新。示例如下：
+
+```c#
+var optimizer = keras.optimizers.SGD(learning_rate);
+
+// Run training for the given number of steps.
+foreach (var (step, (batch_x, batch_y)) in enumerate(train_data, 1))
+{
+    // Wrap computation inside a GradientTape for automatic differentiation.
+    using var g = tf.GradientTape();
+    // Forward pass.
+    var pred = neural_net.Apply(batch_x, is_training: true);
+    var loss = cross_entropy_loss(pred, batch_y);
+
+    // Compute gradients.
+    var gradients = g.gradient(loss, neural_net.trainable_variables);
+
+    // Update W and b following gradients.
+    optimizer.apply_gradients(zip(gradients, neural_net.trainable_variables.Select(x => x as ResourceVariable)));
+}
+
+// Test model on validation set.
+{
+    var pred = neural_net.Apply(x_test, is_training: false);
+    this.accuracy = (float)accuracy(pred, y_test);
+    print($"Test Accuracy: {this.accuracy}");
+}
+```
+
+
+
+//TODO 在深度学习中，学习率这一超参数 随着训练的深入迭代，可以逐渐衰减，这个可以更好地适应梯度下降的曲线（谷底区域 Loss 的下降逐渐放缓），往往可以取得更好的效果。在 Keras 中为了方便调试这类常见的情况，可以专门设置 学习率衰减规划，通过 keras.optimizers.schedules.ExponentialDecay() 方法实现学习率的动态规划。示例如下：//TODO 下述代码为Python，需要转换为 C#
+
+```c#
+lr_schedule = keras.optimizers.schedules.ExponentialDecay(
+    initial_learning_rate=1e-2,
+    decay_steps=10000,
+    decay_rate=0.9)
+optimizer = keras.optimizers.SGD(learning_rate=lr_schedule)
+```
+
+
+
+**Keras 中可以使用的优化器如下：**
+
+- SGD
+
+  默认参数时为纯 SGD，设置 momentum 参数不为 0 时效果变成 SGDM，考虑了一阶动量。设置 nesterov 为 True 后效果变成 NAG，即 Nesterov Accelerated Gradient，在可以理解为在标准动量方法中添加了一个校正因子，以提前计算下一步的梯度来指导当前梯度。 
+
+- RMSprop
+
+  考虑了二阶动量，对于不同的参数有不同的学习率，即自适应学习率，对 Adagrad 进行了优化，通过指数平滑的值实现只考虑一定窗口区间内的二阶动量。
+
+- Adam
+
+  同时考虑了一阶动量和二阶动量，可以看成 RMSprop 上进一步考虑了一阶动量。
+
+- Adadelta
+
+  考虑了二阶动量，与RMSprop类似，但是更加复杂一些，自适应性更强。
+
+- Adagrad
+
+  考虑了二阶动量，对于不同的参数有不同的学习率，即自适应学习率。缺点是学习率单调下降，可能后期学习速率过慢会导致提前停止学习。
+
+- Adamax
+
+   这是基于无穷范数的 Adam 的变体 ，Adamax 有时候性能优于 Adam，特别是针对带有嵌入层 embeddings 的模型。
+
+- Nadam
+
+  在 Adam 基础上进一步考虑了 Nesterov Acceleration。
+
+- Ftrl
+
+  实现 FTRL （Follow-the-regularized-Leader）算法的优化器，同时支持 在线L2正则项 和 特征缩减L2正则项，广泛适用于在线学习（ Online Learning ）这类训练方式。
 
 
 
 
 
+#### 10.3.4 损失函数 Losses
+
+损失函数是模型在训练过程中不断优化降低其值的对象。
+
+在 Keras 中的损失函数 Losses 是搭配 compile() 和 fit() 这2个方法使用的，是模型训练必须要设置的两个参数之一（另外一个是 Optimizers）。
+
+对于回归模型，通常使用的损失函数是均方损失函数 mean_squared_error；对于二分类模型，通常使用的是二元交叉熵损失函数 binary_crossentropy；对于多分类模型，如果 label 是 one-hot 编码的，则使用类别交叉熵损失函数 categorical_crossentropy，如果 label 是类别序号编码的，则需要使用稀疏类别交叉熵损失函数 sparse_categorical_crossentropy。
 
 
 
+你可以先实例化 losses 作为参数传给 model.compile() ，或者直接通过字符串标识符传递给 loss 参数，后一种方式将直接使用损失函数的默认参数。示例如下：
+
+```c#
+// method 1# : compile(ILossFunc loss, OptimizerV2 optimizer, string[] metrics)
+            var layers = keras.layers;
+            model = keras.Sequential(new List<ILayer>
+            {
+                layers.Rescaling(1.0f / 255, input_shape: (img_dim.dims[0], img_dim.dims[1], 3)),
+                layers.Conv2D(16, 3, padding: "same", activation: keras.activations.Relu),
+                layers.MaxPooling2D(),
+                layers.Flatten(),
+                layers.Dense(128, activation: keras.activations.Relu),
+                layers.Dense(num_classes)
+            });
+            var loss = keras.losses.SparseCategoricalCrossentropy(from_logits: true);
+            model.compile(optimizer: keras.optimizers.Adam(learning_rate : 0.01f),
+                loss: loss,
+                metrics: new[] { "accuracy" });
 
 
-
-
-
+// method 2# : compile(string optimizer, string loss, string[] metrics)
+            var layers = keras.layers;
+            model = keras.Sequential(new List<ILayer>
+            {
+                layers.Rescaling(1.0f / 255, input_shape: (img_dim.dims[0], img_dim.dims[1], 3)),
+                layers.Conv2D(16, 3, padding: "same", activation: keras.activations.Relu),
+                layers.MaxPooling2D(),
+                layers.Flatten(),
+                layers.Dense(128, activation: keras.activations.Relu),
+                layers.Dense(num_classes)
+            });
+            model.compile("adam", "sparse_categorical_crossentropy", metrics: new[] { "accuracy" });
+```
 
 
 
