@@ -964,41 +964,341 @@ optimizer = keras.optimizers.SGD(learning_rate=lr_schedule)
 
 
 
+**Keras 中的损失函数如下：**
+
+**概率损失 Probabilistic losses**
+
+- BinaryCrossentropy
+
+   <img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.assets/equation.svg" alt="img" style="zoom:80%;" /> 
+
+  二元交叉熵，针对的是二分类问题。
+
+- CategoricalCrossentropy 
+
+   <img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.assets/equation-1610418141984.svg" alt="img" style="zoom:80%;" /> 
+
+  多类别交叉熵损失，针对的是多分类问题，真实值需要 one-hot 编码格式处理。
+
+- SparseCategoricalCrossentropy 
+
+  稀疏多类别交叉熵损失，原理 CategoricalCrossentropy 一样，不过直接支持整数编码类型的真实值。
+
+- Poisson
+
+   <img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.assets/equation-1610418176051.svg" alt="img" style="zoom:80%;" /> 
+
+  ```
+  loss = y_pred - y_true * log(y_pred)
+  ```
+
+  泊松损失，目标值为泊松分布的负对数似然损失 。
+
+- KLDivergence
+
+   <img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.assets/equation-1610418445938.svg" alt="img" style="zoom:80%;" /> 
+
+   <img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.assets/equation-1610418457117.svg" alt="img" style="zoom:80%;" /> 
+
+  Kullback-Leibler Divergence，KLD，KL散度，也叫做相对熵（Relative Entropy），它衡量的是相同事件空间里的两个概率分布的差异情况。
+
+**回归损失 Regression losses**
+
+- MeanSquaredError
+
+   <img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.assets/equation-1610418494152.svg" alt="img" style="zoom:80%;" /> 
+
+  ```
+  loss = square(y_true - y_pred)
+  ```
+
+  均方差损失，MSE。
+
+- MeanAbsoluteError
+
+   <img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.assets/equation-1610418611895.svg" alt="img" style="zoom:80%;" /> 
+
+  ```
+  loss = abs(y_true - y_pred)
+  ```
+
+  平均绝对值误差，MAE。
+
+- MeanAbsolutePercentageError
+
+   <img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.assets/equation-1610418653153.svg" alt="img" style="zoom:80%;" /> 
+
+  ```
+  loss = 100 * abs(y_true - y_pred) / y_true
+  ```
+
+  平均绝对百分比误差，MAPE，注意分母不要除0。
+
+- MeanSquaredLogarithmicError
+
+   <img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.assets/equation-1610418695237.svg" alt="img" style="zoom:80%;" /> 
+
+  ```
+  loss = square(log(y_true + 1.) - log(y_pred + 1.))
+  ```
+
+   MSLE，均方对数误差。
+
+- CosineSimilarity
+
+   <img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.assets/equation-1610420195932.svg" alt="img" style="zoom:80%;" /> 
+
+  ```
+  loss = -sum(l2_norm(y_true) * l2_norm(y_pred))
+  ```
+
+  计算余弦相似度。
+
+- Huber
+
+   <img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.assets/equation-1610420269513.svg" alt="img" style="zoom:80%;" /> 
+
+   <img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.assets/equation-1610420279413.svg" alt="img" style="zoom:80%;" /> 
+
+  Huber Loss 是一个用于回归问题的带参损失函数, 优点是能增强平方误差损失函数对离群点的鲁棒性。当预测偏差小于 δ 时，它采用平方误差,当预测偏差大于 δ 时，采用的线性误差。相比于均方误差，HuberLoss降低了对离群点的惩罚程度，所以 HuberLoss 是一种常用的鲁棒的回归损失函数。 
+
+- LogCosh
+
+   <img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.assets/equation-1610420446722.svg" alt="img" style="zoom:80%;" /> 
+
+   <img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.assets/equation-1610420456714.svg" alt="img" style="zoom:80%;" /> 
+
+  ```
+  logcosh = log((exp(x) + exp(-x))/2)，其中 x = y_pred - y_true。
+  ```
+
+  LogCosh是预测误差的双曲余弦的对数， 它比L2损失更平滑，与均方误差大致相同，但是不会受到偶尔疯狂的错误预测的强烈影响 
+
+**最大间隔 (常见SVM) Hinge损失 Hinge losses for "maximum-margin" classification**
+
+- Hinge
+
+   <img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.assets/equation-1610420521133.svg" alt="img" style="zoom:80%;" /> 
+
+  ```
+  loss = maximum(1 - y_true * y_pred, 0)
+  ```
+
+  Hinge 损失常用于二分类。
+
+- SquaredHinge
+
+   <img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.assets/equation-1610420875670.svg" alt="img" style="zoom:80%;" /> 
+
+  ```
+  loss = square(maximum(1 - y_true * y_pred, 0))
+  ```
+
+  Hinge 损失的平方。
+
+- CategoricalHinge
+
+  ```
+  loss = maximum(neg - pos + 1, 0) , neg=maximum((1-y_true)*y_pred) and pos=sum(y_true*y_pred)
+  ```
+
+  Hinge 损失的多类别形式。 
 
 
 
 
 
+你也可以独立使用损失函数进行运算，通过调用 Tensorflow.Keras.Losses 的基类 ILossFunc 的 Call() 实现，方法如下：
+
+```c#
+Tensor Call(Tensor y_true, Tensor y_pred, Tensor sample_weight = null)
+```
+
+参数说明：
+
+- y_true：真实值，张量类型，shape 为  (batch_size, d0, ... dN) ；
+- y_pred：预测值，张量类型，shape 为  (batch_size, d0, ... dN) ；
+- sample_weight： 每个样本的损失的缩放权重系数。如果提供了标量，则损失将简单地按照该给定值缩放；如果 `sample_weight` 是向量 `[batch_size]`，则批次中每个样本的总损失将由 `sample_weight` 向量中的相应元素缩放；如果 `sample_weight` 的形状为`(batch_size, d0, ... dN)`（或可以广播为该形状），则每个`y_pred` 的损失值均按 `sample_weight `的相应值进行缩放。 
+
+返回值：
+
+默认情况下，损失函数会为每个输入样本返回一个标量损失值。
 
 
 
 
 
+损失类的实例化过程也可以传入构造函数参数，我们最后来看下构造函数的结构：
+
+```c#
+public Loss(string reduction = ReductionV2.AUTO, 
+            string name = null,
+            bool from_logits = false)
+```
+
+参数说明：
+
+- reduction：默认  `"sum_over_batch_size"`（即平均值）。可枚举值为 “ sum_over_batch_size”，“ sum” 和 “ none”，区别如下：
+  - “ sum_over_batch_size”：表示损失实例将返回批次中每个样本损失的平均值；
+  - “ sum”：表示损失实例将返回批次中每个样本损失的总和；
+  - “none”：表示损失实例将返回每个样本损失的完整数组；
+- name：损失函数的自定义名称；
+- from_logits：代表是否有经过Logistic函数，常见的 Logistic 函数包括 Sigmoid、Softmax 函数。
 
 
 
 
 
+#### 10.3.5 评估指标 Metrics
+
+最后，我们来看下 评估指标 Metrics，评估指标是判断模型性能的函数。
+
+上一小节，我们了解了 损失函数 Losses。我们知道，损失函数除了作为模型训练时的优化目标（ Objective = Loss + Regularizatio ），也能够作为模型好坏的一种评价指标。但通常人们还会从其它角度评估模型的好坏，这就是评估指标。
+
+大部分的损失函数都可以作为评估指标，但评估指标不一定可以作为损失函数，例如 AUC , Accuracy , Precision。这是因为训练模型的过程中不使用评估指标 Metrics 度量的结果，因此评估指标不要求连续可导，而损失函数是参与模型训练过程的，通常要求连续可导。
 
 
 
+评估指标 Metrics 是 compile() 方法的可选参数，在模型编译时，可以通过列表形式指定多个评估指标。示例代码如下：
+
+```c#
+var layers = keras.layers;
+model = keras.Sequential(new List<ILayer>
+      {
+            layers.Rescaling(1.0f / 255, input_shape: (img_dim.dims[0], img_dim.dims[1], 3)),
+            layers.Conv2D(16, 3, padding: "same", activation: keras.activations.Relu),
+            layers.MaxPooling2D(),
+            layers.Flatten(),
+            layers.Dense(128, activation: keras.activations.Relu),
+            layers.Dense(num_classes)
+       });
+
+model.compile(optimizer: keras.optimizers.Adam(),
+              loss: keras.losses.SparseCategoricalCrossentropy(from_logits: true),
+              metrics: new[] { "accuracy", "MeanSquaredError", "AUC" });
+
+model.summary();
+```
 
 
 
+**Keras 中的评估指标如下：**
+
+（注：评估指标较多，且和损失函数部分相似，这里只对部分进行说明。）
+
+**准确性指标 Accuracy metrics**
+
+- Accuracy
+
+  准确性，计算预测与真实标签相同的频率；
+
+- BinaryAccuracy
+
+  二进制分类准确性，计算预测与真实二进制标签匹配的频率 ；
+
+- CategoricalAccuracy
+
+  多分类准确性，计算预测与真实 one-hot 标签匹配的频率 ；
+
+- TopKCategoricalAccuracy
+
+  多分类 TopK 准确率，计算目标在最高 `K` 个预测中的频率，要求 y_true(label) 为 one-hot 编码形式；
+
+- SparseTopKCategoricalAccuracy
+
+  稀疏多分类 TopK 准确率，计算整数值的目标在最高 `K` 个预测中的频率，要求 y_true(label) 为整数序号编码形式；
+
+**概率指标 Probabilistic metrics**
+
+（与损失函数 Loss 类似）
+
+- BinaryCrossentropy
+- CategoricalCrossentropy
+- SparseCategoricalCrossentropy
+- KLDivergence
+- Poisson
+
+**回归指标 Regression metrics**
+
+（与损失函数 Loss 类似）
+
+- MeanSquaredError
+
+- RootMeanSquaredError
+
+   <img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.assets/20190714113817886.png" alt="img" style="zoom: 67%;" /> 
+
+  均方根误差指标，RMES；
+
+- MeanAbsoluteError
+
+- MeanAbsolutePercentageError
+
+- MeanSquaredLogarithmicError
+
+- CosineSimilarity
+
+- LogCoshError
+
+**二元分类指标 Classification metrics based on True/False positives & negatives**
+
+- AUC
+
+  通过黎曼求和公式求出近似的AUC（ ROC曲线 “TPR vs FPR” 下的面积 ），用于二分类，可直观解释为随机抽取一个正样本和一个负样本，正样本的预测值大于负样本的概率；
+
+- Precision
+
+  精确率，用于二分类，Precision = TP/(TP+FP)；
+
+- Recall
+
+  召回率，用于二分类，Recall = TP/(TP+FN)；
+
+- TruePositives
+
+  真正例，用于二分类；
+
+- TrueNegatives
+
+  真负例，用于二分类；
+
+- FalsePositives
+
+  假正例，用于二分类；
+
+- FalseNegatives
+
+  假负例，用于二分类；
+
+- PrecisionAtRecall
+
+  在召回率大于等于指定值的情况下计算最佳精度；
+
+- SensitivityAtSpecificity
+
+  当特异性 > = 指定值时，计算特定的最佳灵敏度；
+
+- SpecificityAtSensitivity
+
+  当灵敏度> =指定值时，计算特定的最佳特异性；
+
+**图像分割指标  Image segmentation metrics**
+
+- MeanIoU
+
+  Mean Intersection-Over-Union 是语义图像分割的常用评估指标，它首先计算每个语义类的IOU，然后计算所有种类的平均值。IOU的定义如下：IOU = true_positive /（true_positive + false_positive + false_negative）；
+
+**最大间隔 (常见SVM) Hinge指标 Hinge metrics for "maximum-margin" classification**
+
+（与损失函数 Loss 类似）
+
+- Hinge
+- SquaredHinge
+- CategoricalHinge
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+以上就是 Keras 中内置的评估指标，如果需要自定义评估指标，你可以对 Tensorflow.Keras.Metrics.Metric 进行子类化，重写构造函数、add_weight 方法、update_state 方法和 result 方法实现评估指标的计算逻辑，从而得到评估指标的自定义类的实现形式。 
 
 
 
