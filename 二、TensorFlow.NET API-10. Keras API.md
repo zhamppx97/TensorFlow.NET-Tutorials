@@ -362,6 +362,27 @@ Model.summary(int line_length = -1, float[] positions = null)
 
 打印网络模型的内容摘要，包含网络层结构和参数描述等。
 
+一个简单的3层网络打印出的模型示例如下：
+
+```
+Model: "mnist_model"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         [(None, 784)]             0         
+_________________________________________________________________
+dense (Dense)                (None, 64)                50240     
+_________________________________________________________________
+dense_1 (Dense)              (None, 64)                4160      
+_________________________________________________________________
+dense_2 (Dense)              (None, 10)                650       
+=================================================================
+Total params: 55,050
+Trainable params: 55,050
+Non-trainable params: 0
+_________________________________________________________________
+```
+
 **参数**
 
 - **line_length**：int 类型，打印的总行数，默认值 -1 代表打印所有内容；
@@ -1306,23 +1327,559 @@ model.summary();
 
 ### 10.4 Keras 建立模型的3种方式
 
-//keras建模的一般步骤 先画示意图
+在 Keras 中玩转神经网络模型一般有以下流程（5步走）：
+
+- 准备训练数据（载入数据、数据预处理、生成批次）
+- 搭建神经网络模型
+- 配置训练过程和模型编译
+- 训练模型
+- 评估模型
+
+如图所示：
+
+<img src="%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.assets/1610502638177.png" alt="1610502638177" style="zoom: 67%;" />
 
 
 
 
 
+可以使用以下3种方式构建模型：① 使用 Sequential 按层堆叠方式构建模型；② 使用函数式 API 构建任意结构模型；③ 继承 Model 基类构建完全自定义的模型。
+
+对于结构相对简单和典型的神经网络（比如 MLP 和 CNN），并使用常规的手段进行训练 ，优先使用Sequential方法构建。
+
+如果模型有多输入或者多输出，或者模型需要共享权重，或者模型具有残差连接等非顺序结构，推荐使用函数式API进行创建。这是一个易于使用的，全功能的API，支持任意模型的架构，对于大多数人和大多数用例都是足够的。
+
+如果上述2种方式还无法满足模型需求，可以对 `Tensorflow.keras.Model` 类进行扩展以定义自己的新模型，同时手动编写了训练和评估模型的流程。这种模型子类化方式灵活度高，你可以从头开始实施所有操作，且与其他流行的深度学习框架共通，适合学术研究领域的模型开发探索。
+
+具体3种方式的案例可以参考 “二、TensorFlow.NET API-8. 深度神经网络(DNN)入门”，链接如下：
+
+https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.md
 
 
-有三种创建Keras模型的方法：
 
-- 的[顺序模型](https://keras.io/guides/sequential_model)，这是非常简单的（层的简单列表），但仅限于单输入，单输出层的堆叠（作为名字赠送）。
-- 该[功能的API](https://keras.io/guides/functional_api)，这是一个易于使用的，全功能的API，支持任意机型的架构。对于大多数人和大多数用例，这就是您应该使用的。这就是Keras的“产业实力”模型。
-- [模型子类化](https://keras.io/guides/model_subclassing)，您可以从头开始实施所有操作。如果您有复杂的现成的研究用例，请使用此选项。
+接下来，我们通过示例代码片段，简单了解下 Keras 中的3种构建模型的方式。
 
 
 
+#### 10.4.1 Sequential API
 
+Sequential 模型适用于 **简单的层堆叠，** 其中每一层都有 **一个输入张量和一个输出张量**。
+
+有2种方式可以将神经网络结构按特定顺序叠加起来，一种是直接提供一个层的列表，另外一种是通过层的 add 方式在末尾逐层添加。
+
+
+
+**① layers 列表方式**
+
+```c#
+int num_classes = 5;
+var layers = keras.layers;
+
+model = keras.Sequential(new List<ILayer>
+{
+    layers.Rescaling(1.0f / 255, input_shape: (img_dim.dims[0], img_dim.dims[1], 3)),
+    layers.Conv2D(16, 3, padding: "same", activation: keras.activations.Relu),
+    layers.MaxPooling2D(),
+    layers.Flatten(),
+    layers.Dense(128, activation: keras.activations.Relu),
+    layers.Dense(num_classes)
+});
+```
+
+
+
+**② layers.add() 方式**
+
+```c#
+int num_classes = 5;
+var layers = keras.layers;
+
+model = keras.Sequential();
+model.Layers.Add(layers.Rescaling(1.0f / 255, input_shape: (img_dim.dims[0], img_dim.dims[1], 3)));
+model.Layers.Add(layers.Conv2D(16, 3, padding: "same", activation: keras.activations.Relu));
+model.Layers.Add(layers.MaxPooling2D());
+model.Layers.Add(layers.Flatten());
+model.Layers.Add(layers.Dense(128, activation: keras.activations.Relu));
+model.Layers.Add(layers.Dense(num_classes));
+```
+
+
+
+
+
+#### 10.4.2 Functional API
+
+Keras Functional API 是一种创建比 Sequential API 更灵活的模型的方法。Functional API 可以处理具有非线性拓扑，共享层甚至多个输入或输出的模型。这种方式主要思想是，深度学习模型通常是层的有向无环图（DAG）。
+
+
+
+考虑以下模型：
+
+```
+(input: 784-dimensional vectors)
+       ↧
+[Dense (64 units, relu activation)]
+       ↧
+[Dense (64 units, relu activation)]
+       ↧
+[Dense (10 units, softmax activation)]
+       ↧
+(output: logits of a probability distribution over 10 classes)
+```
+
+这是一个基础的具有三层结构的网络。要使用 Functional API 方式构建此模型，我们先创建了一个输入节点 inputs 喂给模型，然后在此 inputs 对象上调用一个图层 outputs 节点，并依次添加剩余两个图层，最后把 输入 inputs 和 输出 outputs 传递给 keras.Model 的参数，创建模型。
+
+示例代码片段如下：
+
+```c#
+// input layer
+var inputs = keras.Input(shape: 784);
+
+// 1st dense layer
+var outputs = layers.Dense(64, activation: keras.activations.Relu).Apply(inputs);
+
+// 2nd dense layer
+outputs = layers.Dense(64, activation: keras.activations.Relu).Apply(outputs);
+
+// output layer
+outputs = layers.Dense(10).Apply(outputs);
+
+// build keras model
+model = keras.Model(inputs, outputs, name: "mnist_model");
+```
+
+我们可以通过 model.summary() 方法打印模型的摘要：
+
+```c#
+model.summary();
+```
+
+输出如下：
+
+```
+Model: "mnist_model"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_1 (InputLayer)         [(None, 784)]             0         
+_________________________________________________________________
+dense (Dense)                (None, 64)                50240     
+_________________________________________________________________
+dense_1 (Dense)              (None, 64)                4160      
+_________________________________________________________________
+dense_2 (Dense)              (None, 10)                650       
+=================================================================
+Total params: 55,050
+Trainable params: 55,050
+Non-trainable params: 0
+_________________________________________________________________
+```
+
+
+
+
+
+#### 10.4.3 Model Subclassing 
+
+如果现有的这些层无法满足我的要求，我们不仅可以继承 Tensorflow.keras.Model 编写自己的模型类，也可以继承 Tensorflow.keras.layers.Layer 编写自己的层。Layer 类是 Keras 中的核心抽象之一，Layer 封装了状态（层的“权重”）和从输入到输出的转换（“Call”，即层的前向传递）。 
+
+我们来用代码创建一个卷积神经网络，并自定义一个网络的参数为分类标签的种类数量。
+
+首先，必要的引用添加如下：
+
+```c#
+using NumSharp;
+using System.Linq;
+using Tensorflow;
+using Tensorflow.Keras.ArgsDefinition;
+using Tensorflow.Keras.Engine;
+using Tensorflow.Keras.Optimizers;
+using static Tensorflow.Binding;
+using static Tensorflow.KerasApi;
+```
+
+接下来，子类化创建自定义CNN模型，参数为标签种类数，层使用 keras 中预定义的层（你也可以子类化 Layer 创建自定义的层）。我们在模型的构造函数中创建层，并在 Call() 方法中配置层的前向传播的输入输出顺序，模型类的代码如下：
+
+```c#
+public class ConvNet : Model
+{
+    Layer conv1;
+    Layer maxpool1;
+    Layer conv2;
+    Layer maxpool2;
+    Layer flatten;
+    Layer fc1;
+    Layer dropout;
+    Layer output;
+
+    public ConvNet(ConvNetArgs args)
+        : base(args)
+    {
+        var layers = keras.layers;
+
+        // Convolution Layer with 32 filters and a kernel size of 5.
+        conv1 = layers.Conv2D(32, kernel_size: 5, activation: keras.activations.Relu);
+
+        // Max Pooling (down-sampling) with kernel size of 2 and strides of 2.
+        maxpool1 = layers.MaxPooling2D(2, strides: 2);
+
+        // Convolution Layer with 64 filters and a kernel size of 3.
+        conv2 = layers.Conv2D(64, kernel_size: 3, activation: keras.activations.Relu);
+        // Max Pooling (down-sampling) with kernel size of 2 and strides of 2. 
+        maxpool2 = layers.MaxPooling2D(2, strides: 2);
+
+        // Flatten the data to a 1-D vector for the fully connected layer.
+        flatten = layers.Flatten();
+
+        // Fully connected layer.
+        fc1 = layers.Dense(1024);
+        // Apply Dropout (if is_training is False, dropout is not applied).
+        dropout = layers.Dropout(rate: 0.5f);
+
+        // Output layer, class prediction.
+        output = layers.Dense(args.NumClasses);
+
+        StackLayers(conv1, maxpool1, conv2, maxpool2, flatten, fc1, dropout, output);
+    }
+
+    // Set forward pass.
+    protected override Tensors Call(Tensors inputs, Tensor state = null, bool is_training = false)
+    {
+        inputs = tf.reshape(inputs, (-1, 28, 28, 1));
+        inputs = conv1.Apply(inputs);
+        inputs = maxpool1.Apply(inputs);
+        inputs = conv2.Apply(inputs);
+        inputs = maxpool2.Apply(inputs);
+        inputs = flatten.Apply(inputs);
+        inputs = fc1.Apply(inputs);
+        inputs = dropout.Apply(inputs, is_training: is_training);
+        inputs = output.Apply(inputs);
+
+        if (!is_training)
+            inputs = tf.nn.softmax(inputs);
+
+        return inputs;
+    }
+}
+
+public class ConvNetArgs : ModelArgs
+{
+    public int NumClasses { get; set; }
+}
+```
+
+最后，我们输入训练数据，编译模型，利用梯度优化（optimizer.apply_gradients）迭代训练模型，训练完成后，输入测试数据集对模型效果进行评估。代码如下：
+
+```c#
+// MNIST dataset parameters.
+int num_classes = 10;
+
+// Training parameters.
+float learning_rate = 0.001f;
+int training_steps = 100;
+int batch_size = 128;
+int display_step = 10;
+float accuracy_test = 0.0f;
+
+IDatasetV2 train_data;
+NDArray x_test, y_test, x_train, y_train;
+
+public override void PrepareData()
+{
+    ((x_train, y_train), (x_test, y_test)) = keras.datasets.mnist.load_data();
+    // Convert to float32.
+    // (x_train, x_test) = (np.array(x_train, np.float32), np.array(x_test, np.float32));
+    // Normalize images value from [0, 255] to [0, 1].
+    (x_train, x_test) = (x_train / 255.0f, x_test / 255.0f);
+
+    train_data = tf.data.Dataset.from_tensor_slices(x_train, y_train);
+    train_data = train_data.repeat()
+        .shuffle(5000)
+        .batch(batch_size)
+        .prefetch(1)
+        .take(training_steps);
+}
+
+public void Run()
+{
+    tf.enable_eager_execution();
+
+    PrepareData();
+
+    // Build neural network model.
+    var conv_net = new ConvNet(new ConvNetArgs
+                               {
+                                   NumClasses = num_classes
+                               });
+
+    // ADAM optimizer. 
+    var optimizer = keras.optimizers.Adam(learning_rate);
+
+    // Run training for the given number of steps.
+    foreach (var (step, (batch_x, batch_y)) in enumerate(train_data, 1))
+    {
+        // Run the optimization to update W and b values.
+        run_optimization(conv_net, optimizer, batch_x, batch_y);
+
+        if (step % display_step == 0)
+        {
+            var pred = conv_net.Apply(batch_x);
+            var loss = cross_entropy_loss(pred, batch_y);
+            var acc = accuracy(pred, batch_y);
+            print($"step: {step}, loss: {(float)loss}, accuracy: {(float)acc}");
+        }
+    }
+
+    // Test model on validation set.
+    {
+        var pred = conv_net.Apply(x_test);
+        accuracy_test = (float)accuracy(pred, y_test);
+        print($"Test Accuracy: {accuracy_test}");
+    }
+}
+
+void run_optimization(ConvNet conv_net, OptimizerV2 optimizer, Tensor x, Tensor y)
+{
+    using var g = tf.GradientTape();
+    var pred = conv_net.Apply(x, is_training: true);
+    var loss = cross_entropy_loss(pred, y);
+
+    // Compute gradients.
+    var gradients = g.gradient(loss, conv_net.trainable_variables);
+
+    // Update W and b following gradients.
+    optimizer.apply_gradients(zip(gradients, conv_net.trainable_variables.Select(x => x as ResourceVariable)));
+}
+
+Tensor cross_entropy_loss(Tensor x, Tensor y)
+{
+    // Convert labels to int 64 for tf cross-entropy function.
+    y = tf.cast(y, tf.int64);
+    // Apply softmax to logits and compute cross-entropy.
+    var loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels: y, logits: x);
+    // Average loss across the batch.
+    return tf.reduce_mean(loss);
+}
+
+Tensor accuracy(Tensor y_pred, Tensor y_true)
+{
+    // # Predicted class is the index of highest score in prediction vector (i.e. argmax).
+    var correct_prediction = tf.equal(tf.argmax(y_pred, 1), tf.cast(y_true, tf.int64));
+    return tf.reduce_mean(tf.cast(correct_prediction, tf.float32), axis: -1);
+}
+```
+
+
+
+
+
+###  10.5 模型训练
+
+模型建立完成后，TensorFlow 也内置了2种模型的训练方法：Keras 的 model.fit() 和 TensorFlow 的 optimizer.apply_gradients() ，我们简单地分别介绍一下。
+
+
+
+**① 内置 fit 方法**
+
+Keras 中的 model 内置了模型训练、评估和预测方法，分别为 model.fit() 、model.evaluate() 和 model.predict() 。
+
+其中 fit 方法用来训练模型，该方法功能非常强大, 支持对 numpy array 、 Tensorflow.data.Dataset 和 Tensorflow.Keras.Datasets 数据进行训练，并且可以通过设置回调函数实现对训练过程的复杂控制逻辑。
+
+我们通过 Functional API 方式来演示 MNIST数据集使用 fit 训练模型的方法。
+
+第一步，引用类库。
+
+```c#
+using NumSharp;
+using Tensorflow.Keras.Engine;
+using static Tensorflow.Binding;
+using static Tensorflow.KerasApi;
+```
+
+第二步，准备数据集。
+
+```c#
+NDArray x_train, y_train, x_test, y_test;
+
+public void PrepareData()
+{
+    (x_train, y_train, x_test, y_test) = keras.datasets.mnist.load_data();
+    x_train = x_train.reshape(60000, 784) / 255f;
+    x_test = x_test.reshape(10000, 784) / 255f;
+}
+```
+
+第三步，构建并编译模型。
+
+```c#
+Model model;
+public void BuildModel()
+{
+    // input layer
+    var inputs = keras.Input(shape: 784);
+
+    // 1st dense layer
+    var outputs = layers.Dense(64, activation: keras.activations.Relu).Apply(inputs);
+
+    // 2nd dense layer
+    outputs = layers.Dense(64, activation: keras.activations.Relu).Apply(outputs);
+
+    // output layer
+    outputs = layers.Dense(10).Apply(outputs);
+
+    // build keras model
+    model = keras.Model(inputs, outputs, name: "mnist_model");
+    // show model summary
+    model.summary();
+
+    // compile keras model into tensorflow's static graph
+    model.compile(loss: keras.losses.SparseCategoricalCrossentropy(from_logits: true),
+                  optimizer: keras.optimizers.RMSprop(),
+                  metrics: new[] { "accuracy" });
+}
+```
+
+最后一步，训练并评估模型（代码同时演示了模型的保存本地和本地载入）。
+
+```c#
+public override void Train()
+{
+
+    // train model by feeding data and labels.
+    model.fit(x_train, y_train, batch_size: 64, epochs: 2, validation_split: 0.2f);
+
+    // evluate the model
+    model.evaluate(x_test, y_test, verbose: 2);
+
+    // save and serialize model
+    model.save("mnist_model");
+
+    // recreate the exact same model purely from the file:
+    // model = keras.models.load_model("path_to_my_model");
+}
+```
+
+
+
+**② 利用梯度优化器 从头开始编写训练循环**
+
+自定义训练循环无需编译模型，直接利用优化器根据损失函数反向传播进行参数迭代，拥有最高的灵活性。
+
+代码参考本章上述 “10.4.3 Model Subclassing ” 一节，我们对其中的训练代码部分进行一下说明。
+
+我们搭建一个3层的全连接神经网络（子类方式），网络层参数如下：
+
+```c#
+var neural_net = new NeuralNet(new NeuralNetArgs
+{
+    NumClasses = num_classes,
+    NeuronOfHidden1 = 128,
+    Activation1 = keras.activations.Relu,
+    NeuronOfHidden2 = 256,
+    Activation2 = keras.activations.Relu
+});
+```
+
+模型中的变量和超参数如下：
+
+```c#
+// MNIST dataset parameters.
+int num_classes = 10; // 0 to 9 digits
+int num_features = 784; // 28*28
+
+// Training parameters.
+float learning_rate = 0.1f;
+int display_step = 100;
+int batch_size = 256;
+int training_steps = 1000;
+
+float accuracy;
+IDatasetV2 train_data;
+NDArray x_test, y_test, x_train, y_train;
+```
+
+然后，我们自定义交叉熵损失函数和准确度评估指标：
+
+```c#
+// Cross-Entropy Loss.
+// Note that this will apply 'softmax' to the logits.
+Func<Tensor, Tensor, Tensor> cross_entropy_loss = (x, y) =>
+{
+    // Convert labels to int 64 for tf cross-entropy function.
+    y = tf.cast(y, tf.int64);
+    // Apply softmax to logits and compute cross-entropy.
+    var loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels: y, logits: x);
+    // Average loss across the batch.
+    return tf.reduce_mean(loss);
+};
+
+// Accuracy metric.
+Func<Tensor, Tensor, Tensor> accuracy = (y_pred, y_true) =>
+{
+    // Predicted class is the index of highest score in prediction vector (i.e. argmax).
+    var correct_prediction = tf.equal(tf.argmax(y_pred, 1), tf.cast(y_true, tf.int64));
+    return tf.reduce_mean(tf.cast(correct_prediction, tf.float32), axis: -1);
+};
+```
+
+接着，我们搭建随机梯度下降优化器，并应用梯度优化器于模型：
+
+```c#
+// Stochastic gradient descent optimizer.
+var optimizer = keras.optimizers.SGD(learning_rate);
+
+// Optimization process.
+Action<Tensor, Tensor> run_optimization = (x, y) =>
+{
+    // Wrap computation inside a GradientTape for automatic differentiation.
+    using var g = tf.GradientTape();
+    // Forward pass.
+    var pred = neural_net.Apply(x, is_training: true);
+    var loss = cross_entropy_loss(pred, y);
+
+    // Compute gradients.
+    var gradients = g.gradient(loss, neural_net.trainable_variables);
+
+    // Update W and b following gradients.
+    optimizer.apply_gradients(zip(gradients, neural_net.trainable_variables.Select(x => x as ResourceVariable)));
+};
+```
+
+最后，使用自定义循环迭代进行模型训练，训练后的模型手动进行准确率评估：
+
+```c#
+// Run training for the given number of steps.
+foreach (var (step, (batch_x, batch_y)) in enumerate(train_data, 1))
+{
+    // Run the optimization to update W and b values.
+    run_optimization(batch_x, batch_y);
+
+    if (step % display_step == 0)
+    {
+        var pred = neural_net.Apply(batch_x, is_training: true);
+        var loss = cross_entropy_loss(pred, batch_y);
+        var acc = accuracy(pred, batch_y);
+        print($"step: {step}, loss: {(float)loss}, accuracy: {(float)acc}");
+    }
+}
+
+// Test model on validation set.
+{
+    var pred = neural_net.Apply(x_test, is_training: false);
+    this.accuracy = (float)accuracy(pred, y_test);
+    print($"Test Accuracy: {this.accuracy}");
+}
+```
+
+
+
+
+
+至此，Keras 的模型搭建和模型训练就全部完成了，Keras 官方还有大量的完整解决方案的代码示例，涵盖计算机视觉、自然语言处理、数据结构化、推荐系统、时间序列、音频数据识别、Gan深度学习、强化学习和快速 Keras 模型等领域。
+
+同时，你也可以直接调用 Keras 中的模型存储库 Keras Applications，其内置了 VGG、ResNet、InceptionNet、MobileNet 和 DenseNet 等大量成熟的深度学习模型，进行训练、直接推理使用或应用迁移学习。
+
+因此，Keras 的简单、快速而不失灵活性的特点，使其成为 TensorFlow 推荐广大开发者使用，并且得到 TensorFlow 的官方内置和全面支持的核心 API 。
 
 
 
