@@ -1,8 +1,6 @@
-# [C# TensorFlow 2 入门教程](<https://github.com/SciSharp/TensorFlow.NET-Tutorials>)
+# [C# TensorFlow 2 实战教程](<https://github.com/SciSharp/TensorFlow.NET-Tutorials>)
 
-# 一、机器学习基础
-
-# 二、TensorFlow.NET API与入门手册
+# 一、TensorFlow.NET API 入门
 
 ## [1. TensorFlow.NET介绍](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/二、TensorFlow.NET API-1. TensorFlow.NET介绍.md>)
 
@@ -10,7 +8,7 @@
 
 ## [3. Eager Mode](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/二、TensorFlow.NET API-3. Eager Mode.md>)
 
-## [4. 自动求导机制](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/二、TensorFlow.NET API-4. 自动求导机制.md>)
+## [4. 自动求导](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/二、TensorFlow.NET API-4. 自动求导机制.md>)
 
 ## [5. Linear Regression](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/二、TensorFlow.NET API-5. Linear Regression.md>)
 
@@ -20,39 +18,45 @@
 
 ## [8. 深度神经网络(DNN)入门](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/%E4%BA%8C%E3%80%81TensorFlow.NET%20API-8.%20%E6%B7%B1%E5%BA%A6%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(DNN)%E5%85%A5%E9%97%A8.md>)
 
-## [9. AutoGraph机制](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/%E4%BA%8C%E3%80%81TensorFlow.NET%20API-9.%20AutoGraph%E6%9C%BA%E5%88%B6.md>)
+## [9. AutoGraph机制详解](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/%E4%BA%8C%E3%80%81TensorFlow.NET%20API-9.%20AutoGraph%E6%9C%BA%E5%88%B6.md>)
 
-## [10. Keras API](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.md>)
+# 二、Keras 简明教程
 
-## 11. Tensorboard和Summary类
+## [1. Keras 简要介绍](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/%E4%BA%8C%E3%80%81TensorFlow.NET%20API-10.%20Keras%20API.md>)
 
-## 12. CheckPoint操作
+## 2. 模型（Model）与层（Layer） 
 
-## 13. 神经网络相关
+## 3. Keras 常用 API 说明
 
-# 三、工业应用与案例
+## 4. Keras 建立模型的3种方式
+
+## 5. 模型训练
+
+# 三、生产应用与案例
 
 ## [1. TensorFlow.NET 初探](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/三、工业应用与案例-1. TensorFlow.NET 初探.md>)
 
-## 2. TensorFlow.NET 图像分类
+## [2. 在C#下使用TensorFlow.NET训练自己的数据集](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/%E9%99%84%E5%BD%95%EF%BC%9A2.%20%E5%9C%A8C%23%E4%B8%8B%E4%BD%BF%E7%94%A8TensorFlow.NET%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86.md>)
 
-## 3. TensorFlow.NET 目标检测
+## 3. 工业生产环境应用案例
 
-## 4. TensorFlow.NET 图像处理
+## 4. 视觉图像分类
 
-## 5. 工厂大数据分析
+## 5. 视觉目标检测
 
-## 6. 自然语言处理应用
+## 6. 迁移学习应用
 
-## 7. 对抗网络实战
+## 7. 自然语言处理
+
+## 8. 时间序列预测
+
+## 9. 强化学习实战
 
 
 
 # 附录
 
 ## [1. TensorFlow.NET 在工业应用中的优势](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/%E9%99%84%E5%BD%95%EF%BC%9A1.%20TensorFlow.NET%20%E5%9C%A8%E5%B7%A5%E4%B8%9A%E5%BA%94%E7%94%A8%E4%B8%AD%E7%9A%84%E4%BC%98%E5%8A%BF.md>)
-
-## [2. 在C#下使用TensorFlow.NET训练自己的数据集](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/%E9%99%84%E5%BD%95%EF%BC%9A2.%20%E5%9C%A8C%23%E4%B8%8B%E4%BD%BF%E7%94%A8TensorFlow.NET%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86.md>)
 
 
 
