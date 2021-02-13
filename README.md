@@ -40,7 +40,7 @@
 
 ## [3. 工业生产环境应用案例](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/%E9%99%84%E5%BD%95%EF%BC%9A1.%20TensorFlow.NET%20%E5%9C%A8%E5%B7%A5%E4%B8%9A%E5%BA%94%E7%94%A8%E4%B8%AD%E7%9A%84%E4%BC%98%E5%8A%BF.md>)
 
-## 4. 视觉图像分类
+## [4. 视觉图像分类](<https://github.com/SciSharp/TensorFlow.NET-Tutorials/blob/master/%E4%B8%89%E3%80%81%E7%94%9F%E4%BA%A7%E5%BA%94%E7%94%A8%E4%B8%8E%E6%A1%88%E4%BE%8B-4.%20%E8%A7%86%E8%A7%89%E5%9B%BE%E5%83%8F%E5%88%86%E7%B1%BB.md>)
 
 ## 5. 视觉目标检测
 
